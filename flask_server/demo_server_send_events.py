@@ -33,9 +33,9 @@ def get_grid_chen(filename: str):
     )
 
 
-@app.route("/tabs", methods=['GET'])
+@app.route("/modules", methods=['GET'])
 def get_tabs():
-    modules_cursor = database.db.get_collection('tabs').find({}, sort=[('createAt', pymongo.DESCENDING)])
+    modules_cursor = database.db.get_collection('modules').find({}, sort=[('createAt', pymongo.DESCENDING)])
     modules = []
     for module in modules_cursor:
         module['id'] = str(module['_id'])
@@ -47,27 +47,27 @@ def get_tabs():
     return jsonify(modules)
 
 
-@app.route("/tabs/<name>.js", methods=['GET'])
+@app.route("/modules/<name>.js", methods=['GET'])
 def get_tab_code(name: str):
-    module = database.db.get_collection('tabs').find_one({"name": name}, sort=[('createAt', pymongo.DESCENDING)])
+    module = database.db.get_collection('modules').find_one({"name": name}, sort=[('createAt', pymongo.DESCENDING)])
     return Response(response=module['code'], mimetype="application/JavaScript")
 
 
-@app.route("/tabs/<name>", methods=['GET'])
+@app.route("/modules/<name>", methods=['GET'])
 def get_tab(name: str):
-    module = database.db.get_collection('tabs').find_one({"name": name})
+    module = database.db.get_collection('modules').find_one({"name": name})
     if module is None:
         return jsonify(error='Module not found'), 404
     del module['_id']
     return jsonify(module)
 
 
-@app.route("/tabs/<name>", methods=['POST'])
+@app.route("/modules/<name>", methods=['POST'])
 def post_tab(name: str):
     module: dict = request.get_json(force=True)
     module['name'] = name
     module['createAt'] = datetime.datetime.utcnow()
-    database.db.get_collection('tabs').insert_one(module)
+    database.db.get_collection('modules').insert_one(module)
     return jsonify(message='Inserted module.')
 
 

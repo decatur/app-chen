@@ -12,12 +12,11 @@ db = pymongo.MongoClient('localhost:27017', tz_aware=True, serverSelectionTimeou
 
 
 def initialize():
-    db.get_collection('tabs').drop()
-    collection: pymongo.collection.Collection = db.get_collection('tabs')
-    tabs: List[str] = glob.glob('../client/tab*.js')
-    for tab_path in tabs:
-        path = pathlib.Path(tab_path)
-        logging.info(f'Importing module {path}')
+    collection: pymongo.collection.Collection = db.get_collection('modules')
+    collection.drop()
+    tabs = pathlib.Path('../client').glob('tab*.js')
+    for path in tabs:
+        logging.info(f'Importing module {path.resolve()}')
         module = dict(
             code=path.read_text(encoding='utf8'),
             name=path.stem,

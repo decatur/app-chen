@@ -19,7 +19,7 @@
     <grid-chen id="modules"></grid-chen>
     <div style="flex: 1;">
         <form>
-            <button name="save">Save</button>
+            <button title="Save Module" name="save">🐾</button>
             as <input name="key">
         </form>
         <div id="code"></div>
@@ -43,7 +43,7 @@
 
     form.save.onclick = function () {
         const key = form.key.value;
-        fetch('/tabs/' + key, {
+        fetch('/modules/' + key, {
             method: 'POST',
             headers: {'Content-Type': 'application/json; charset=utf-8'},
             body: JSON.stringify({code: editor.getValue()})
@@ -67,7 +67,7 @@
      * @param {string} name
      */
     function fetchModule(name) {
-        fetch('/tabs/' + name)
+        fetch('/modules/' + name)
             .then(responseToJSON)
             .then(module => {
                 form.key.value = name;
@@ -81,7 +81,7 @@
         fetchModule(window.location.hash.substr(1));
     }
 
-    fetch('/tabs')
+    fetch('/modules')
         .then(responseToJSON)
         .then(modules => {
             const schema = {
