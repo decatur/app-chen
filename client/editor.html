@@ -1,0 +1,120 @@
+<!doctype html>
+
+<title>App Shell Editor</title>
+<meta charset="utf-8"/>
+<link rel="stylesheet" href="codemirror/lib/codemirror.css">
+<script src="codemirror/lib/codemirror.js"></script>
+<script src="codemirror/addon/edit/matchbrackets.js"></script>
+<script src="codemirror/mode/javascript/javascript.js"></script>
+<style>
+    .CodeMirror {
+        border-top: 1px solid black;
+        border-bottom: 1px solid black;
+        height: 40em;
+    }
+</style>
+
+<body>
+<div style="display: flex; flex-direction: row">
+    <grid-chen id="modules"></grid-chen>
+    <div style="flex: 1;">
+        <form>
+            <button name="save">Save</button>
+            as <input name="key">
+        </form>
+        <div id="code"></div>
+    </div>
+</div>
+</body>
+
+<script type="module">
+
+    import {handleError, responseToJSON} from "./app.js"
+    import "./grid-chen/webcomponent.js"
+    import {createView} from "./grid-chen/matrixview.js"
+
+    const form = document.forms[0];
+    const editor = window['CodeMirror'](document.getElementById('code'), {
+        lineNumbers: true,
+        matchBrackets: true
+    });
+
+    form.onsubmit = (event) => event.preventDefault();
+
+    form.save.onclick = function () {
+        const key = form.key.value;
+        fetch('/tabs/' + key, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json; charset=utf-8'},
+            body: JSON.stringify({code: editor.getValue()})
+        })
+            .then(responseToJSON)
+            .then((response) => {
+                alert(JSON.stringify(response))
+            })
+            .catch(handleError);
+    };
+
+    /**
+     *
+     * @param {HashChangeEvent} evt
+     */
+    window.onhashchange = function(evt) {
+        fetchModule(window.location.hash.substr(1));
+    };
+
+    /**
+     * @param {string} name
+     */
+    function fetchModule(name) {
+        fetch('/tabs/' + name)
+            .then(responseToJSON)
+            .then(module => {
+                form.key.value = name;
+                editor.setValue(module.code);
+            })
+            .catch(handleError);
+    }
+
+    //const params = new URLSearchParams(location.search);
+    if (window.location.hash.substr(1)) {
+        fetchModule(window.location.hash.substr(1));
+    }
+
+    fetch('/tabs')
+        .then(responseToJSON)
+        .then(modules => {
+            const schema = {
+                title: 'Modules',
+                type: 'array',
+                items: {
+                    type: 'object',
+                    properties: {
+                        name: {title: 'Name', type: 'string', format:'uri', width: 100},
+                        //createAt: {title: 'Create At', type: 'string', format: 'date-time', width: 300},
+                        //createBy: {title: 'Create By', type: 'string', width: 200},
+                        //id: {title: 'Id', type: 'string', width: 200}
+                    }
+                }
+            };
+
+            // grid-chen does not handle seconds and millis.
+            modules.forEach(module => {
+                module.createAt = module.createAt.replace(/:\d\d\.\d+/, '');
+                module.name = `[${module.name}](#${module.name})`;
+            });
+
+            const currentModulesByName = {};
+            modules.forEach(module => {
+               if (!(module.name in currentModulesByName)) {
+                   currentModulesByName[module.name] = module;
+               }
+            });
+
+            const currentModules = new Set(modules.map(module => module.name));
+            document.querySelector('grid-chen').resetFromView(createView(schema, Object.values(currentModulesByName)));
+        })
+        .catch(handleError);
+
+</script>
+

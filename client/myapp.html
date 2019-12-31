@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>App Shell Template</title>
+    <link rel="stylesheet" href="app.css" type="text/css"/>
+</head>
+<body>
+<header>
+    <span>App Shell</span>
+    <button id="activeTab"></button>
+    <dialog id="menu">
+        <form method="dialog"></form>
+    </dialog>
+    <span id="status" style="float:right;"></span>
+</header>
+
+<!-- Tabs must have class names 'tab' and the associated module name. -->
+<div title="The Tab1" class="tab tab1"></div>
+<div title="The Tab2" class="tab tab2"></div>
+<div title="The Tab3" class="tab tab3"></div>
+
+</body>
+
+<script type="module">
+    import {initializeApp} from "./app.js"
+    const app = initializeApp();
+    app.tabRoot = "/tabs/";
+    app.props = {
+        start: '2020-01-01',
+        end: '2021-01-01'
+    };
+    app.activateTab();
+    window.setTimeout(function () {
+        app.register({
+            'zen': function (event) {
+                console.log(event);
+                document.getElementById('status').textContent = JSON.parse(event.data).lesson;
+            }
+        })
+    }, 1000);
+</script>
+</html>
