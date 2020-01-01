@@ -1,11 +1,7 @@
 <!doctype html>
-
+<html style="height: 100%;">
 <title>App Shell Editor</title>
 <meta charset="utf-8"/>
-<link rel="stylesheet" href="codemirror/lib/codemirror.css">
-<script src="codemirror/lib/codemirror.js"></script>
-<script src="codemirror/addon/edit/matchbrackets.js"></script>
-<script src="codemirror/mode/javascript/javascript.js"></script>
 <style>
     .CodeMirror {
         border-top: 1px solid black;
@@ -14,9 +10,9 @@
     }
 </style>
 
-<body>
+<body style="height: 100%;">
 <div style="display: flex; flex-direction: row">
-    <grid-chen id="modules"></grid-chen>
+    <grid-chen id="modules" style="height: 100%;"></grid-chen>
     <div style="flex: 1;">
         <form>
             <button title="Save Module" name="save">🐾</button>
@@ -29,16 +25,26 @@
 
 <script type="module">
 
-    import {handleError, responseToJSON} from "./app.js"
+    import {handleError, responseToJSON, loadLegacyScript} from "./app.js"
     import "./grid-chen/webcomponent.js"
     import {createView} from "./grid-chen/matrixview.js"
 
-    const form = document.forms[0];
-    const editor = window['CodeMirror'](document.getElementById('code'), {
-        lineNumbers: true,
-        matchBrackets: true
-    });
+    let editor = void 0;
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = '@import url("codemirror/lib/codemirror.css") screen';
+    document.body.appendChild(styleSheet);
+    loadLegacyScript(["codemirror/lib/codemirror.js", "codemirror/addon/edit/matchbrackets.js", "codemirror/mode/javascript/javascript.js"])
+        .then(() => {
+            editor = window['CodeMirror'](document.getElementById('code'), {
+                lineNumbers: true,
+                matchBrackets: true
+            });
+            if (window.location.hash.substr(1)) {
+                fetchModule(window.location.hash.substr(1));
+            }
+        });
 
+    const form = document.forms[0];
     form.onsubmit = (event) => event.preventDefault();
 
     form.save.onclick = function () {
@@ -56,10 +62,9 @@
     };
 
     /**
-     *
      * @param {HashChangeEvent} evt
      */
-    window.onhashchange = function(evt) {
+    window.onhashchange = function (evt) {
         fetchModule(window.location.hash.substr(1));
     };
 
@@ -76,11 +81,6 @@
             .catch(handleError);
     }
 
-    //const params = new URLSearchParams(location.search);
-    if (window.location.hash.substr(1)) {
-        fetchModule(window.location.hash.substr(1));
-    }
-
     fetch('/modules')
         .then(responseToJSON)
         .then(modules => {
@@ -90,7 +90,7 @@
                 items: {
                     type: 'object',
                     properties: {
-                        name: {title: 'Name', type: 'string', format:'uri', width: 100},
+                        name: {title: 'Name', type: 'string', format: 'uri', width: 100},
                         //createAt: {title: 'Create At', type: 'string', format: 'date-time', width: 300},
                         //createBy: {title: 'Create By', type: 'string', width: 200},
                         //id: {title: 'Id', type: 'string', width: 200}
@@ -106,9 +106,9 @@
 
             const currentModulesByName = {};
             modules.forEach(module => {
-               if (!(module.name in currentModulesByName)) {
-                   currentModulesByName[module.name] = module;
-               }
+                if (!(module.name in currentModulesByName)) {
+                    currentModulesByName[module.name] = module;
+                }
             });
 
             const currentModules = new Set(modules.map(module => module.name));
@@ -117,4 +117,4 @@
         .catch(handleError);
 
 </script>
-
+</html>

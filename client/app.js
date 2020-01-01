@@ -12,11 +12,14 @@ if (!!window.MSInputMethodContext && !!document['documentMode']) {
     throw Error(msg)
 }
 
-export function initializeApp() {
+/**
+ *
+ * @param {{title: string, src: string}[]} tabs
+ * @returns {{eventListeners: {}, eventSource: EventSource, activeTabId: string, connectionId: *, props: {}}}
+ */
+export function initializeApp(tabs) {
 
     const app = {
-        /** @type{string} */
-        tabRoot: undefined,
         eventSource: new EventSource("/connection"),
         props: {},
         eventListeners: {},
@@ -95,22 +98,25 @@ export function initializeApp() {
         window.location.hash = '#' + tabId;
         app.activeTabId = tabId;
 
-        return import(this.tabRoot + `${tabId}.js`)
+        return import(tabId)
             .then((module) => {
-                return module.render(this, this.props, tab.tabElement);
+                return module['render'](this, this.props, tab.tabElement);
+            })
+            .catch((foo) => {
+                console.error(foo);
+                tab.tabElement.textContent = String(foo);
             });
     };
 
-    function createMenu() {
+    function createTabs() {
         const menuElement = document.getElementById('menu');
-        const tabs = document.getElementsByClassName('tab');
 
-        for (let i = 0; i < tabs.length; i++) {
-            const tabElement = tabs.item(i);
-            let id;
-            for (id of tabElement.classList.values()) {
-                if (id !== 'tab') break;
-            }
+        for (const tab of tabs) {
+            const id = tab.src;
+            const tabElement = document.createElement('div');
+            tabElement.title = tab.title;
+            tabElement.className = 'tab';
+            document.body.appendChild(tabElement);
 
             const navElement = document.createElement('button');
             navElement.value = id;
@@ -137,7 +143,7 @@ export function initializeApp() {
         };
     }
 
-    createMenu();
+    createTabs();
 
     return app
 }
@@ -189,4 +195,24 @@ export function rejectHttpError(response) {
         ex.name = ex.title = response.statusText;
         throw ex;
     });
+}
+
+/**
+ * Loads the specified scripts in order. The returned promise is never rejected.
+ * @param {string[]} scriptSources
+ * @returns {Promise<void>}
+ */
+export function loadLegacyScript(scriptSources) {
+    return new Promise(function (resolve, reject) {
+        void reject;
+        for (const [index, src] of scriptSources.entries()) {
+            const scriptElement = document.createElement('script');
+            scriptElement.src = src;
+            scriptElement.async = false;
+            if (index === scriptSources.length-1) {
+                scriptElement.onload = resolve;
+            }
+            document.body.appendChild(scriptElement);
+        }
+    })
 }

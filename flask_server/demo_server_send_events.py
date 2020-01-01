@@ -49,13 +49,15 @@ def get_tabs():
 
 @app.route("/modules/<name>.js", methods=['GET'])
 def get_tab_code(name: str):
-    module = database.db.get_collection('modules').find_one({"name": name}, sort=[('createAt', pymongo.DESCENDING)])
+    module = database.current_module(name)
+    if module is None:
+        return jsonify(error='Module not found'), 404
     return Response(response=module['code'], mimetype="application/JavaScript")
 
 
 @app.route("/modules/<name>", methods=['GET'])
 def get_tab(name: str):
-    module = database.db.get_collection('modules').find_one({"name": name})
+    module = database.current_module(name)
     if module is None:
         return jsonify(error='Module not found'), 404
     del module['_id']

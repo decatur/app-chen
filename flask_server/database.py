@@ -11,6 +11,10 @@ logging.getLogger().setLevel(logging.DEBUG)
 db = pymongo.MongoClient('localhost:27017', tz_aware=True, serverSelectionTimeoutMS=1000).get_database('app-shell')
 
 
+def current_module(name: str):
+    return db.get_collection('modules').find_one({"name": name}, sort=[('createAt', pymongo.DESCENDING)])
+
+
 def initialize():
     collection: pymongo.collection.Collection = db.get_collection('modules')
     collection.drop()
