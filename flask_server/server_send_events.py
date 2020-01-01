@@ -14,11 +14,12 @@ import collections
 import json
 import secrets
 from queue import Queue
-from typing import List
+from typing import List, Dict, Callable
 
 _connections = collections.deque()
 _connections_by_event_type = collections.defaultdict(set)
-_retro_events_by_event_type = dict()
+_retro_events_by_event_type = Dict[str, Callable[[str], None]]
+_declared_topics: Dict[str, dict]
 
 
 class Connection:
@@ -71,7 +72,8 @@ def subscribe(connection_id: str, event_types: List[str]):
     for event_type in event_types:
         register(connection, event_type)
 
-def register_retro_events(event_type: str, func):
+
+def register_retro_events(event_type: str, func: Callable[[str], None]):
     _retro_events_by_event_type[event_type] = func
 
 
@@ -91,3 +93,7 @@ def broadcast(event_type: str, event: dict):
     data = json.dumps(event)
     for connection in _connections_by_event_type[event_type]:
         connection.queue.put((event_type, data))
+
+
+def declare_topic(topic: str, description: str, schema: dict):
+    _declared_topics[topic] = dict(topic=topic, description=description, schema=schema)

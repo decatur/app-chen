@@ -1,24 +1,34 @@
 <!doctype html>
-<html style="height: 100%;">
+<html style="height: 100%;" lang="en">
 <title>App Shell Editor</title>
 <meta charset="utf-8"/>
 <style>
-    .CodeMirror {
+    /*.CodeMirror {
         border-top: 1px solid black;
         border-bottom: 1px solid black;
-        height: 40em;
+        height: 100%;
+    }*/
+    button {
+        font-weight: bold;
+        font-size: large;
     }
 </style>
 
 <body style="height: 100%;">
-<div style="display: flex; flex-direction: row">
-    <grid-chen id="modules" style="height: 100%;"></grid-chen>
+<div style="height: 100%; display: flex; flex-direction: row;">
+    <div style="height: 100%; display: flex; flex-direction: column;">
+        <form name="displayToggleForm">
+            <button name="names">⚔</button>
+            <button name="allModules" style="display: none;">☠</button>
+        </form>
+        <grid-chen class="modules" style="height: 100%;"></grid-chen>
+    </div>
     <div style="flex: 1;">
-        <form>
-            <button title="Save Module" name="save">🐾</button>
+        <form name="saveForm">
+            <button title="Save Module" name="save">Save 🐾 my Edits</button>
             as <input name="key">
         </form>
-        <div id="code"></div>
+        <div id="code" style="height: 100%;"></div>
     </div>
 </div>
 </body>
@@ -31,7 +41,7 @@
 
     let editor = void 0;
     const styleSheet = document.createElement('style');
-    styleSheet.textContent = '@import url("codemirror/lib/codemirror.css") screen';
+    styleSheet.textContent = '@import url("codemirror/lib/codemirror.css") screen; .CodeMirror {height: 100%;}';
     document.body.appendChild(styleSheet);
     loadLegacyScript(["codemirror/lib/codemirror.js", "codemirror/addon/edit/matchbrackets.js", "codemirror/mode/javascript/javascript.js"])
         .then(() => {
@@ -44,11 +54,25 @@
             }
         });
 
-    const form = document.forms[0];
-    form.onsubmit = (event) => event.preventDefault();
+    const toggleForm = document.forms['displayToggleForm'];
+    toggleForm.onsubmit = (event) => event.preventDefault();
+    toggleForm.names.onclick = () => {
+        toggleForm.names.style.display = 'none';
+        toggleForm.allModules.style.display = 'inline';
+        displayAll();
+    };
 
-    form.save.onclick = function () {
-        const key = form.key.value;
+    toggleForm.allModules.onclick = () => {
+        toggleForm.allModules.style.display = 'none';
+        toggleForm.names.style.display = 'inline';
+        displayNames();
+    };
+
+    const saveForm = document.forms['saveForm'];
+    saveForm.onsubmit = (event) => event.preventDefault();
+
+    saveForm.save.onclick = function () {
+        const key = saveForm.key.value;
         fetch('/modules/' + key, {
             method: 'POST',
             headers: {'Content-Type': 'application/json; charset=utf-8'},
@@ -56,7 +80,7 @@
         })
             .then(responseToJSON)
             .then((response) => {
-                alert(JSON.stringify(response))
+                // alert(JSON.stringify(response))
             })
             .catch(handleError);
     };
@@ -75,44 +99,61 @@
         fetch('/modules/' + name)
             .then(responseToJSON)
             .then(module => {
-                form.key.value = name;
+                saveForm.key.value = name;
                 editor.setValue(module.code);
             })
             .catch(handleError);
     }
 
+    function displayNames() {
+        const schema = {
+            title: 'Modules',
+            type: 'array',
+            items: {
+                type: 'object',
+                properties: {
+                    name: {title: 'Name', type: 'string', format: 'uri', width: 100}
+                }
+            }
+        };
+        const currentModulesByName = {};
+        globalModules.forEach(module => {
+            if (!(module.name in currentModulesByName)) {
+                currentModulesByName[module.name] = module;
+            }
+        });
+        document.querySelector('.modules').resetFromView(createView(schema, Object.values(currentModulesByName)));
+    }
+
+    function displayAll() {
+        const schema = {
+            title: 'Modules',
+            type: 'array',
+            items: {
+                type: 'object',
+                properties: {
+                    name: {title: 'Name', type: 'string', format: 'uri', width: 100},
+                    createAt: {title: 'Create At', type: 'string', format: 'date-time', width: 300},
+                    createBy: {title: 'Create By', type: 'string', width: 200},
+                    id: {title: 'Id', type: 'string', width: 200}
+                }
+            }
+        };
+        document.querySelector('.modules').resetFromView(createView(schema, globalModules));
+    }
+
+    let globalModules;
+
     fetch('/modules')
         .then(responseToJSON)
         .then(modules => {
-            const schema = {
-                title: 'Modules',
-                type: 'array',
-                items: {
-                    type: 'object',
-                    properties: {
-                        name: {title: 'Name', type: 'string', format: 'uri', width: 100},
-                        //createAt: {title: 'Create At', type: 'string', format: 'date-time', width: 300},
-                        //createBy: {title: 'Create By', type: 'string', width: 200},
-                        //id: {title: 'Id', type: 'string', width: 200}
-                    }
-                }
-            };
-
+            globalModules = modules;
             // grid-chen does not handle seconds and millis.
             modules.forEach(module => {
                 module.createAt = module.createAt.replace(/:\d\d\.\d+/, '');
                 module.name = `[${module.name}](#${module.name})`;
             });
-
-            const currentModulesByName = {};
-            modules.forEach(module => {
-                if (!(module.name in currentModulesByName)) {
-                    currentModulesByName[module.name] = module;
-                }
-            });
-
-            const currentModules = new Set(modules.map(module => module.name));
-            document.querySelector('grid-chen').resetFromView(createView(schema, Object.values(currentModulesByName)));
+            displayNames();
         })
         .catch(handleError);
 

@@ -78,7 +78,7 @@ export function initializeApp(tabs) {
      * @param {string?} tabId
      * @returns {Promise}
      */
-    app.activateTab = function (tabId) {
+    app.activateTabFromHash = function (tabId) {
         tabId = tabId || location.hash.substr(1);
         if (!(tabId in tabsById)) {
             tabId = Object.keys(tabsById)[0];
@@ -129,7 +129,7 @@ export function initializeApp(tabs) {
         menuElement.onclose = function () {
             menuElement.classList.remove('menu-opens');
             if (menuElement.returnValue && menuElement.returnValue !== app.activeTabId) {
-                app.activateTab(menuElement.returnValue);
+                app.activateTabFromHash(menuElement.returnValue);
             }
         };
 

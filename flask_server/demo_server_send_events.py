@@ -21,7 +21,7 @@ def pump_zen_events():
     zen_cycle = itertools.cycle("".join([d.get(c, c) for c in s]).split('\n')[2:])
     index = itertools.count()
     while True:
-        time.sleep(1.0)
+        time.sleep(5.0)
         sse.broadcast('zen', dict(index=next(index), lesson=next(zen_cycle)))
 
 
@@ -29,12 +29,12 @@ def pump_zen_events():
 def get_grid_chen(filename: str):
     grid_chen: pathlib.Path = pathlib.Path('../grid-chen/grid-chen').absolute()
     return send_from_directory(
-        grid_chen, filename  #, cache_timeout=cache_timeout
+        grid_chen, filename  # , cache_timeout=cache_timeout
     )
 
 
 @app.route("/modules", methods=['GET'])
-def get_tabs():
+def get_modules():
     modules_cursor = database.db.get_collection('modules').find({}, sort=[('createAt', pymongo.DESCENDING)])
     modules = []
     for module in modules_cursor:
@@ -48,7 +48,7 @@ def get_tabs():
 
 
 @app.route("/modules/<name>.js", methods=['GET'])
-def get_tab_code(name: str):
+def get_module_code(name: str):
     module = database.current_module(name)
     if module is None:
         return jsonify(error='Module not found'), 404
@@ -56,7 +56,7 @@ def get_tab_code(name: str):
 
 
 @app.route("/modules/<name>", methods=['GET'])
-def get_tab(name: str):
+def get_module(name: str):
     module = database.current_module(name)
     if module is None:
         return jsonify(error='Module not found'), 404
@@ -65,11 +65,12 @@ def get_tab(name: str):
 
 
 @app.route("/modules/<name>", methods=['POST'])
-def post_tab(name: str):
+def post_module(name: str):
     module: dict = request.get_json(force=True)
     module['name'] = name
     module['createAt'] = datetime.datetime.utcnow()
     database.db.get_collection('modules').insert_one(module)
+    sse.broadcast('moduleChanged', dict(name=request.url))
     return jsonify(message='Inserted module.')
 
 
@@ -90,6 +91,14 @@ def open_connection():
     return Response(connection.event_generator(), mimetype="text/event-stream")
 
 
-t = threading.Thread(target=pump_zen_events)
-t.start()
+@app.route('/topics', methods=['GET'])
+def get_topics():
+    return jsonify(list(sse._declared_topics.values()))
+
+
+sse.declare_topic('zen', 'A new zen of python every 5 seconds', dict(properties=dict(lesson=dict(type='string'))))
+sse.declare_topic('moduleChanged', 'A module was changed', dict(properties=dict(name=dict(type='string', format='uri'))))
+
+threading.Thread(target=pump_zen_events).start()
+
 werkzeug.serving.run_simple('localhost', 8080, app, threaded=True)
