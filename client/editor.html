@@ -18,8 +18,7 @@
 <div style="height: 100%; display: flex; flex-direction: row;">
     <div style="height: 100%; display: flex; flex-direction: column;">
         <form name="displayToggleForm">
-            <button name="names">⚔</button>
-            <button name="allModules" style="display: none;">☠</button>
+            <label><input name="showAll" type="checkbox">Show All</label>
         </form>
         <grid-chen class="modules" style="height: 100%;"></grid-chen>
     </div>
@@ -35,7 +34,7 @@
 
 <script type="module">
 
-    import {handleError, responseToJSON, loadLegacyScript} from "./app.js"
+    import {handleError, responseToJSON, loadLegacyScript, initializeApp} from "./app.js"
     import "./grid-chen/webcomponent.js"
     import {createView} from "./grid-chen/matrixview.js"
 
@@ -56,17 +55,7 @@
 
     const toggleForm = document.forms['displayToggleForm'];
     toggleForm.onsubmit = (event) => event.preventDefault();
-    toggleForm.names.onclick = () => {
-        toggleForm.names.style.display = 'none';
-        toggleForm.allModules.style.display = 'inline';
-        displayAll();
-    };
-
-    toggleForm.allModules.onclick = () => {
-        toggleForm.allModules.style.display = 'none';
-        toggleForm.names.style.display = 'inline';
-        displayNames();
-    };
+    toggleForm.showAll.onchange = displayModules;
 
     const saveForm = document.forms['saveForm'];
     saveForm.onsubmit = (event) => event.preventDefault();
@@ -133,7 +122,7 @@
                 type: 'object',
                 properties: {
                     name: {title: 'Name', type: 'string', format: 'uri', width: 100},
-                    createAt: {title: 'Create At', type: 'string', format: 'date-time', width: 300},
+                    createAt: {title: 'Create At', type: 'string', format: 'date-time', frequency: 'MS', width: 300},
                     createBy: {title: 'Create By', type: 'string', width: 200},
                     id: {title: 'Id', type: 'string', width: 200}
                 }
@@ -142,20 +131,40 @@
         document.querySelector('.modules').resetFromView(createView(schema, globalModules));
     }
 
-    let globalModules;
+    /** @type{object[]} */
+    let globalModules = [];
+    function addModule(module) {
+        // grid-chen does not handle seconds and millis.
+        //module.createAt = module.createAt.replace(/:\d\d\.\d+/, '');
+        module.name = `[${module.name}](#${module.name})`;
+        globalModules.unshift(module);
+    }
+
+    function displayModules() {
+        if (toggleForm.showAll.checked) {
+            displayAll();
+        } else {
+            displayNames();
+        }
+    }
 
     fetch('/modules')
         .then(responseToJSON)
         .then(modules => {
-            globalModules = modules;
-            // grid-chen does not handle seconds and millis.
             modules.forEach(module => {
-                module.createAt = module.createAt.replace(/:\d\d\.\d+/, '');
-                module.name = `[${module.name}](#${module.name})`;
+                addModule(module);
             });
-            displayNames();
+            displayModules();
         })
         .catch(handleError);
+
+    const app = initializeApp();
+    app.register({
+        'moduleChanged': function (event) {
+            addModule(JSON.parse(event.data));
+            displayModules();
+        }
+    });
 
 </script>
 </html>

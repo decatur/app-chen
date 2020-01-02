@@ -18,8 +18,8 @@ from typing import List, Dict, Callable
 
 _connections = collections.deque()
 _connections_by_event_type = collections.defaultdict(set)
-_retro_events_by_event_type = Dict[str, Callable[[str], None]]
-_declared_topics: Dict[str, dict]
+_retro_events_by_event_type: Dict[str, Callable[[str], None]] = dict()
+_declared_topics: Dict[str, dict] = dict()
 
 
 class Connection:

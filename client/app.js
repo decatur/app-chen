@@ -143,7 +143,7 @@ export function initializeApp(tabs) {
         };
     }
 
-    createTabs();
+    if (tabs) createTabs();
 
     return app
 }

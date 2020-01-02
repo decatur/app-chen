@@ -35,7 +35,7 @@ def get_grid_chen(filename: str):
 
 @app.route("/modules", methods=['GET'])
 def get_modules():
-    modules_cursor = database.db.get_collection('modules').find({}, sort=[('createAt', pymongo.DESCENDING)])
+    modules_cursor = database.db.get_collection('modules').find({}, sort=[('createAt', pymongo.ASCENDING)])
     modules = []
     for module in modules_cursor:
         module['id'] = str(module['_id'])
@@ -68,9 +68,12 @@ def get_module(name: str):
 def post_module(name: str):
     module: dict = request.get_json(force=True)
     module['name'] = name
-    module['createAt'] = datetime.datetime.utcnow()
+    module['createAt'] = datetime.datetime.now(tz=datetime.timezone.utc)
     database.db.get_collection('modules').insert_one(module)
-    sse.broadcast('moduleChanged', dict(name=request.url))
+    module['createAt'] = module['createAt'].isoformat()
+    module['id'] = str(module['_id'])
+    del module['_id']
+    sse.broadcast('moduleChanged', module)
     return jsonify(message='Inserted module.')
 
 
