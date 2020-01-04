@@ -49,7 +49,10 @@ export function initializeApp(tabs) {
      */
     app.register = function (listenerMap) {
         for (let type in listenerMap) {
-            const listener = listenerMap[type];
+            const listener = function (event) {
+                event.json = JSON.parse(event.data);
+                listenerMap[type](event);
+            };
             this.eventListeners[type] = listener;
             this.eventSource.addEventListener(type, listener);
         }
@@ -209,10 +212,35 @@ export function loadLegacyScript(scriptSources) {
             const scriptElement = document.createElement('script');
             scriptElement.src = src;
             scriptElement.async = false;
-            if (index === scriptSources.length-1) {
+            if (index === scriptSources.length - 1) {
                 scriptElement.onload = resolve;
             }
             document.body.appendChild(scriptElement);
         }
     })
+}
+
+export function fetchJSON(uri) {
+    return fetch(uri)
+        .then(responseToJSON)
+        .catch(handleError);
+}
+
+/**
+ * @param {string} resource
+ * @param {string} topic
+ * @param {function(object[])} onDataFromServer
+ */
+export function sourceEvents(resource, topic, onDataFromServer) {
+    fetch(resource)
+        .then(responseToJSON)
+        .then(onDataFromServer)
+        .catch(handleError);
+
+    const app = initializeApp();
+    app.register({
+        [topic]: function (event) {
+            onDataFromServer(event.json);
+        }
+    });
 }

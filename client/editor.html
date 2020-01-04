@@ -3,12 +3,7 @@
 <title>App Shell Editor</title>
 <meta charset="utf-8"/>
 <style>
-    /*.CodeMirror {
-        border-top: 1px solid black;
-        border-bottom: 1px solid black;
-        height: 100%;
-    }*/
-    button {
+    button, input[type="checkbox"] {
         font-weight: bold;
         font-size: large;
     }
@@ -34,8 +29,8 @@
 
 <script type="module">
 
-    import {handleError, responseToJSON, loadLegacyScript, initializeApp} from "./app.js"
-    import "./grid-chen/webcomponent.js"
+    import {handleError, responseToJSON, loadLegacyScript, sourceEvents, fetchJSON} from "./app.js"
+    import "./grid-chen/webcomponent.js";
     import {createView} from "./grid-chen/matrixview.js"
 
     let editor = void 0;
@@ -49,7 +44,7 @@
                 matchBrackets: true
             });
             if (window.location.hash.substr(1)) {
-                fetchModule(window.location.hash.substr(1));
+                window.onhashchange();
             }
         });
 
@@ -61,7 +56,11 @@
     saveForm.onsubmit = (event) => event.preventDefault();
 
     saveForm.save.onclick = function () {
-        const key = saveForm.key.value;
+        const key = saveForm.key.value.trim();
+        if (key === '') {
+            alert('Save as what? 🤡');
+            return;
+        }
         fetch('/modules/' + key, {
             method: 'POST',
             headers: {'Content-Type': 'application/json; charset=utf-8'},
@@ -78,91 +77,59 @@
      * @param {HashChangeEvent} evt
      */
     window.onhashchange = function (evt) {
-        fetchModule(window.location.hash.substr(1));
+        fetchJSON('/modules/' + window.location.hash.substr(1))
+            .then(module => {
+                saveForm.key.value = module.name;
+                editor.setValue(module.code);
+            });
     };
 
-    /**
-     * @param {string} name
-     */
-    function fetchModule(name) {
-        fetch('/modules/' + name)
-            .then(responseToJSON)
-            .then(module => {
-                saveForm.key.value = name;
-                editor.setValue(module.code);
-            })
-            .catch(handleError);
-    }
-
     function displayNames() {
-        const schema = {
-            title: 'Modules',
-            type: 'array',
-            items: {
-                type: 'object',
-                properties: {
-                    name: {title: 'Name', type: 'string', format: 'uri', width: 100}
-                }
-            }
-        };
-        const currentModulesByName = {};
-        globalModules.forEach(module => {
-            if (!(module.name in currentModulesByName)) {
-                currentModulesByName[module.name] = module;
-            }
-        });
-        document.querySelector('.modules').resetFromView(createView(schema, Object.values(currentModulesByName)));
+        const schema = {title: 'Modules Names', type: 'array', items: model.schema.items.properties.name};
+        const names = Array.from(new Set(model.modules.map(module => module.name)));
+        document.querySelector('.modules').resetFromView(createView(schema, names));
     }
 
-    function displayAll() {
-        const schema = {
-            title: 'Modules',
-            type: 'array',
-            items: {
-                type: 'object',
-                properties: {
-                    name: {title: 'Name', type: 'string', format: 'uri', width: 100},
-                    createAt: {title: 'Create At', type: 'string', format: 'date-time', frequency: 'MS', width: 300},
-                    createBy: {title: 'Create By', type: 'string', width: 200},
-                    id: {title: 'Id', type: 'string', width: 200}
-                }
-            }
-        };
-        document.querySelector('.modules').resetFromView(createView(schema, globalModules));
-    }
-
-    /** @type{object[]} */
-    let globalModules = [];
-    function addModule(module) {
-        // grid-chen does not handle seconds and millis.
-        //module.createAt = module.createAt.replace(/:\d\d\.\d+/, '');
-        module.name = `[${module.name}](#${module.name})`;
-        globalModules.unshift(module);
+    function displayDetails() {
+        document.querySelector('.modules').resetFromView(createView(model.schema, model.modules));
     }
 
     function displayModules() {
         if (toggleForm.showAll.checked) {
-            displayAll();
+            displayDetails();
         } else {
             displayNames();
         }
     }
 
-    fetch('/modules')
-        .then(responseToJSON)
-        .then(modules => {
-            modules.forEach(module => {
-                addModule(module);
-            });
-            displayModules();
-        })
-        .catch(handleError);
+    class Model {
+        constructor() {
+            /** @type{object[]} */
+            this.modules = [];
+            this.schema = void 0;
+        }
 
-    const app = initializeApp();
-    app.register({
-        'moduleChanged': function (event) {
-            addModule(JSON.parse(event.data));
+        onchanged() {
             displayModules();
+        }
+
+        addModules(modules) {
+            modules.forEach(module => {
+                module.name = `[${module.name}](#${module.name})`;
+                this.modules.unshift(module);
+            });
+            this.onchanged();
+        }
+    }
+
+    const model = new Model();
+
+    sourceEvents('/modules', 'moduleChanged', (response) => {
+        if (response.schema) {
+            model.schema = response.schema;
+            model.addModules(response.modules);
+        } else {
+            model.addModules([response]);
         }
     });
 

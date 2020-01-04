@@ -6,15 +6,16 @@ from typing import List
 import datetime
 
 import werkzeug
-from flask import Flask, Response, request, jsonify, send_from_directory
+from flask import Flask, Response, request, jsonify, send_from_directory, redirect
 import pymongo
 
 import flask_server.database as database
 import flask_server.server_send_events as sse
 from this import d, s
 
+static_folder = pathlib.Path('./client').resolve();
 # WARNING: When exposing the app to an unsecure location, the static_folder MUST only contain web resources!!!
-app = Flask(__name__, root_path='./', static_folder='./client', static_url_path='/')
+app = Flask(__name__, static_folder=static_folder, static_url_path='/')
 
 
 def pump_zen_events():
@@ -25,16 +26,38 @@ def pump_zen_events():
         sse.broadcast('zen', dict(index=next(index), lesson=next(zen_cycle)))
 
 
+@app.errorhandler(pymongo.errors.ServerSelectionTimeoutError)
+def db_error_handler(error):
+    return f'Database connection failed: {str(error)}', 500
+
+
+@app.route("/", methods=['GET'])
+def get_home():
+    return redirect('/myapp.html')
+
+
 @app.route("/grid-chen/<filename>", methods=['GET'])
 def get_grid_chen(filename: str):
     grid_chen: pathlib.Path = pathlib.Path('../grid-chen/grid-chen').absolute()
-    return send_from_directory(
-        grid_chen, filename  # , cache_timeout=cache_timeout
-    )
+    return send_from_directory(grid_chen, filename)
 
 
 @app.route("/modules", methods=['GET'])
 def get_modules():
+    schema = {
+        "title": 'Modules',
+        "type": 'array',
+        "items": {
+            "type": 'object',
+            "properties": {
+                "name": {"title": 'Name', "type": 'string', "format": 'uri', "width": 100},
+                "createAt": {"title": 'Create At', "type": 'string', "format": 'date-time', "frequency": 'MS', "width": 300},
+                "createBy": {"title": 'Create By', "type": 'string', "width": 200},
+                "id": {"title": 'Id', "type": 'string', "width": 200}
+            }
+        }
+    }
+
     modules_cursor = database.db.get_collection('modules').find({}, sort=[('createAt', pymongo.ASCENDING)])
     modules = []
     for module in modules_cursor:
@@ -44,7 +67,7 @@ def get_modules():
         module['createAt'] = create_at.isoformat()
         modules.append(module)
 
-    return jsonify(modules)
+    return jsonify(schema=schema, modules=modules)
 
 
 @app.route("/modules/<name>.js", methods=['GET'])

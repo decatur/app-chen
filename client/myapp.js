@@ -13,11 +13,11 @@ app.props = {
 app.register({
     'zen': function (event) {
         console.log(event);
-        document.getElementById('status').textContent = JSON.parse(event.data).lesson;
+        document.getElementById('status').textContent = event.json.lesson;
     },
     'moduleChanged': function (event) {
         console.log(event);
-        document.getElementById('status').textContent = 'moduleChanged: ' + JSON.parse(event.data).name;
+        document.getElementById('status').textContent = 'moduleChanged: ' + event.json.name;
     }
 });
 
