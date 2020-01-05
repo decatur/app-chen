@@ -7,7 +7,7 @@
     Events can be broadcast to all registered Connections.
     Events can also be emitted to a single Connection.
 
-    Usage see demo_server_send_events.py
+    Usage see routes.py
 """
 
 import collections

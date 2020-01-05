@@ -15,9 +15,9 @@ app.register({
         console.log(event);
         document.getElementById('status').textContent = event.json.lesson;
     },
-    'moduleChanged': function (event) {
+    'transaction': function (event) {
         console.log(event);
-        document.getElementById('status').textContent = 'moduleChanged: ' + event.json.name;
+        document.getElementById('status').textContent = JSON.stringify(event.json);
     }
 });
 
