@@ -63,7 +63,7 @@ def mixin_routes(app: Flask):
         module = database.current_module(name)
         if module is None:
             return jsonify(error='Module not found'), 404
-        return Response(response=module['code'], mimetype="application/JavaScript")
+        return Response(response=module['code'], mimetype="application/javascript; charset=utf-8")
 
 
     @app.route("/modules/<name>", methods=['GET'])

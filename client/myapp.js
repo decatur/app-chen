@@ -17,7 +17,7 @@ app.register({
     },
     'transaction': function (event) {
         console.log(event);
-        document.getElementById('status').textContent = JSON.stringify(event.json);
+        document.getElementById('status').textContent = 'executionTime: ' + event.json.executionTime;
     }
 });
 

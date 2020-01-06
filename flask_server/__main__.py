@@ -4,10 +4,11 @@ import time
 import itertools
 import pathlib
 from this import d, s
-from flask import Flask
+from flask import Flask, jsonify
 import flask_server.server_send_events as sse
 from random import randint
 import datetime
+import pymongo
 
 import flask_server.routes as demo_server_send_events
 import flask_server.database as database
@@ -16,6 +17,30 @@ import flask_server.database as database
 static_folder = pathlib.Path('./client').resolve();
 # WARNING: When exposing the app to an unsecure location, the static_folder MUST only contain web resources!!!
 app = Flask(__name__, static_folder=static_folder, static_url_path='/')
+
+transaction_schema = {'type': 'object', 'properties': {
+        'product': {'type': 'string', 'width': 200},
+        'executionTime': {'type': 'string', 'format': 'date-time', 'period': 'SECONDS', 'width': 200},
+        'quantity': {'type': 'number', 'unit': 'MW'},
+        'price': {'type': 'number', 'unit': '€/MWh'}
+    }}
+
+
+@app.route("/transactions", methods=['GET'])
+def get_transaction():
+    transaction = database.db.get_collection('transactions').find({}, sort=[('executionTime', pymongo.ASCENDING)])
+    transactions = []
+    for transaction in transaction:
+        transaction['id'] = str(transaction['_id'])
+        del transaction['_id']
+        transactions.append(transaction)
+
+    schema = {
+        "title": 'Modules',
+        "type": 'array',
+        "items": transaction_schema
+    }
+    return jsonify(schema=schema, data=transactions)
 
 
 def pump_zen():
@@ -33,14 +58,16 @@ def pump_zen():
 
 def pump_transactions():
     def target():
+        price = randint(400, 600) / 10
         while True:
             time.sleep(randint(1, 10) / 5)
             transaction = dict(
                 product=datetime.datetime(2020, 2, 1, randint(0, 23), 15 * randint(0, 3)).isoformat()[0:16] + 'PT15M',
                 executionTime=datetime.datetime.now(tz=datetime.timezone.utc).isoformat(),
                 quantity=randint(0, 40) / 10,
-                price=randint(400, 600) / 10,
+                price=price,
             )
+            price += randint(-10, 10) / 10
             database.db.get_collection('transactions').insert_one(transaction)
             del transaction['_id']
             sse.broadcast('transaction', transaction)
