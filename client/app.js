@@ -20,60 +20,10 @@ if (!!window.MSInputMethodContext && !!document['documentMode']) {
 export function initializeApp(tabs) {
 
     const app = {
-        eventSource: new EventSource("/connection"),
         props: {},
-        eventListeners: {},
-        connectionId: void 0,
         /** @type{string} */
         activeTabId: void 0,
     };
-
-    app.subscribe = function () {
-        const eventTypes = Object.keys(this.eventListeners);
-        if (!eventTypes.length) return;
-
-        fetch('/eventing/subscribe', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json; charset=utf-8'},
-            body: JSON.stringify({
-                connectionId: this.connectionId,
-                eventTypes
-            })
-        })
-            .then(assertResponseOk)
-            .catch(handleError);
-    };
-
-    /**
-     * @param {object} listenerMap
-     */
-    app.register = function (listenerMap) {
-        for (let type in listenerMap) {
-            const listener = function (event) {
-                event.json = JSON.parse(event.data);
-                listenerMap[type](event);
-            };
-            this.eventListeners[type] = listener;
-            this.eventSource.addEventListener(type, listener);
-        }
-        if (app.connectionId) {
-            this.subscribe();
-        }
-    };
-
-    app.eventSource.onopen = function (event) {
-        // pass
-    };
-
-    app.eventSource.onerror = function (event) {
-        // pass
-    };
-
-    app.eventSource.addEventListener('connection_open', function (event) {
-        const data = JSON.parse(event.data);
-        app.connectionId = data['connectionId'];
-        app.subscribe();
-    });
 
     const tabsById = {};
 
@@ -112,7 +62,8 @@ export function initializeApp(tabs) {
     };
 
     function createTabs() {
-        const menuElement = document.getElementById('menu');
+         /** @type{HTMLDialogElement} */
+        const dialogElement = /** @type{HTMLDialogElement} */(document.getElementById('menu'));
 
         for (const tab of tabs) {
             const id = tab.src;
@@ -125,28 +76,36 @@ export function initializeApp(tabs) {
             navElement.value = id;
             navElement.className = 'nav';
             navElement.textContent = tabElement.title;
-            menuElement.firstElementChild.appendChild(navElement);
+            dialogElement.firstElementChild.appendChild(navElement);
             tabsById[id] = {id, tabElement, navElement, display: tabElement.style.display || 'flex'};
         }
 
-        menuElement.onclose = function () {
-            menuElement.classList.remove('menu-opens');
-            if (menuElement.returnValue && menuElement.returnValue !== app.activeTabId) {
-                app.activateTabFromHash(menuElement.returnValue);
+        dialogElement.onclose = function () {
+            dialogElement.classList.remove('menu-opens');
+            if (dialogElement.returnValue && dialogElement.returnValue !== app.activeTabId) {
+                app.activateTabFromHash(dialogElement.returnValue);
             }
         };
 
-        // menuElement.onclick = function() {
-        //     menuElement.close();
-        // };
-
+        //document.getElementById('activeTab').onmouseenter =
         document.getElementById('activeTab').onclick = () => {
-            menuElement.classList.add('menu-opens');
-            menuElement.showModal();
+            dialogElement.classList.add('menu-opens');
+            dialogElement.showModal();
         };
+
+        dialogElement.addEventListener('click', (evt) => {
+            if (evt.target.tagName === 'BUTTON') {
+                // This is quirky: We use method="dialog" on the dialog form to get at the clicked button
+                // (dialogElement.onclose()) AND to close the dialog auto-magically.
+                // To this click we must not to react here.
+                return
+            }
+            console.log(evt);
+            dialogElement.close();
+        });
     }
 
-    if (tabs) createTabs();
+    createTabs();
 
     return app
 }
@@ -157,90 +116,3 @@ window.onerror = function (error, url, line) {
     alert(`While fetching ${url}\n${String(error)}`);
 };
 
-/**
- * @param {Response} response
- * @returns {Object}
- */
-export function assertResponseOk(response) {
-    if (!response.ok) {
-        return rejectHttpError(response)
-    }
-}
-
-/**
- * @param {Response} response
- * @returns {Object}
- */
-export function responseToJSON(response) {
-    if (response.ok) {
-        // status is in the range 200-299
-        return response.json();
-    }
-    return rejectHttpError(response);
-}
-
-/**
- * @param {Error} error
- */
-export function handleError(error) {
-    console.error(error);
-    alert((error.title || error.name) + '\n' + error.message);
-}
-
-export function rejectHttpError(response) {
-    // Returns a rejected promise.
-    return response.text().then(function (body) {
-        if (response.headers.get('content-type').startsWith("text/html")) {
-            console.log(body);
-            //body = 'See console.'
-        }
-        const ex = new Error([response.url, body].join(' '));
-        ex.name = ex.title = response.statusText;
-        throw ex;
-    });
-}
-
-/**
- * Loads the specified scripts in order. The returned promise is never rejected.
- * @param {string[]} scriptSources
- * @returns {Promise<void>}
- */
-export function loadLegacyScript(scriptSources) {
-    return new Promise(function (resolve, reject) {
-        void reject;
-        for (const [index, src] of scriptSources.entries()) {
-            const scriptElement = document.createElement('script');
-            scriptElement.src = src;
-            scriptElement.async = false;
-            if (index === scriptSources.length - 1) {
-                scriptElement.onload = resolve;
-            }
-            document.body.appendChild(scriptElement);
-        }
-    })
-}
-
-export function fetchJSON(uri) {
-    return fetch(uri)
-        .then(responseToJSON)
-        .catch(handleError);
-}
-
-/**
- * @param {string} resource
- * @param {string} topic
- * @param {function(object[])} onDataFromServer
- */
-export function sourceEvents(resource, topic, onDataFromServer) {
-    fetch(resource)
-        .then(responseToJSON)
-        .then(onDataFromServer)
-        .catch(handleError);
-
-    const app = initializeApp();
-    app.register({
-        [topic]: function (event) {
-            onDataFromServer(event.json);
-        }
-    });
-}

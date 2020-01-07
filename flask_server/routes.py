@@ -11,6 +11,8 @@ import flask_server.database as database
 import flask_server.server_send_events as sse
 
 
+transaction_index = 1;
+
 def mixin_routes(app: Flask):
     """Well, bye bye blueprints"""
 

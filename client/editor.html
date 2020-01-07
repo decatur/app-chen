@@ -29,9 +29,9 @@
 
 <script type="module">
 
-    import {handleError, responseToJSON, loadLegacyScript, sourceEvents, fetchJSON} from "./app.js"
     import "/grid-chen/webcomponent.js";
     import {createView} from "/grid-chen/matrixview.js"
+    import {eventing, handleError, responseToJSON, loadLegacyScript, fetchJSON} from "./io.js";
 
     let editor = void 0;
     const styleSheet = document.createElement('style');
@@ -123,15 +123,21 @@
     }
 
     const model = new Model();
-
-    sourceEvents('/modules', 'moduleChanged', (response) => {
-        if (response.schema) {
-            model.schema = response.schema;
-            model.addModules(response.modules);
-        } else {
-            model.addModules([response]);
+    const ev = eventing();
+    ev.sourceEvents({
+        resource: {
+            uri: '/modules', handler: (response) => {
+                model.schema = response.schema;
+                model.addModules(response.modules);
+            }
+        },
+        topic: {
+            uri: 'moduleChanged', handler: (event) => {
+                model.addModules([event]);
+            }
         }
     });
+
 
 </script>
 </html>

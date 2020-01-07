@@ -1,8 +1,9 @@
 import {initializeApp} from "./app.js"
+import {eventing} from "./io.js";
 
 const app = initializeApp([
     {title: 'The Tab1', src: '/modules/tab1.js'},
-    {title: 'The Tab2', src: '/modules/tab2.js'},
+    {title: 'The Tab2', src: './tab2.js'},
     {title: 'The Tab3', src: '/modules/tab3.js'}]);
 
 app.props = {
@@ -10,7 +11,8 @@ app.props = {
     end: '2021-01-01'
 };
 
-app.register({
+const ev = eventing();
+ev.register({
     'zen': function (event) {
         console.log(event);
         document.getElementById('status').textContent = event.json.lesson;

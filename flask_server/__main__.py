@@ -10,11 +10,11 @@ from random import randint
 import datetime
 import pymongo
 
-import flask_server.routes as demo_server_send_events
+import flask_server.routes as routes
 import flask_server.database as database
 
 
-static_folder = pathlib.Path('./client').resolve();
+static_folder = pathlib.Path('./client').resolve()
 # WARNING: When exposing the app to an unsecure location, the static_folder MUST only contain web resources!!!
 app = Flask(__name__, static_folder=static_folder, static_url_path='/')
 
@@ -27,10 +27,11 @@ transaction_schema = {'type': 'object', 'properties': {
 
 
 @app.route("/transactions", methods=['GET'])
-def get_transaction():
-    transaction = database.db.get_collection('transactions').find({}, sort=[('executionTime', pymongo.ASCENDING)])
+def get_transactions():
+    cursor = database.db.get_collection('transactions').find({}, sort=[('executionTime', pymongo.ASCENDING)])
     transactions = []
-    for transaction in transaction:
+
+    for transaction in cursor:
         transaction['id'] = str(transaction['_id'])
         del transaction['_id']
         transactions.append(transaction)
@@ -40,7 +41,11 @@ def get_transaction():
         "type": 'array',
         "items": transaction_schema
     }
-    return jsonify(schema=schema, data=transactions)
+
+    if len(transactions):
+        return jsonify(schema=schema, data=transactions, transactionIndex=transactions[-1]['transactionIndex'])
+    else:
+        return jsonify(schema=schema)
 
 
 def pump_zen():
@@ -66,7 +71,9 @@ def pump_transactions():
                 executionTime=datetime.datetime.now(tz=datetime.timezone.utc).isoformat(),
                 quantity=randint(0, 40) / 10,
                 price=price,
+                transactionIndex=routes.transaction_index
             )
+            routes.transaction_index += 1
             price += randint(-10, 10) / 10
             database.db.get_collection('transactions').insert_one(transaction)
             del transaction['_id']
@@ -82,8 +89,9 @@ def pump_transactions():
     threading.Thread(target=target).start()
 
 
+database.db.get_collection('transactions').drop()
 pump_zen()
 pump_transactions()
 
-demo_server_send_events.mixin_routes(app)
+routes.mixin_routes(app)
 werkzeug.serving.run_simple('localhost', 8080, app, threaded=True)
