@@ -5,7 +5,7 @@ from setuptools.command.develop import develop
 import pathlib
 p = pathlib.Path(__file__).absolute()
 
-print(">>>>>>>>>" + p)
+print(">>>>>>>>>" + str(p))
 
 setup(
     name='app-chen',
