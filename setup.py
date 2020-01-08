@@ -6,8 +6,8 @@ setup(
     name='app-chen',
     version='0.1dev',
     packages=['appchen'],
-    # package_data={'appchen': ['client/**/*', 'client/**/**/*']},
+    package_data={'appchen': ['client/**/*']},
     # include_package_data=True,
-    data_files = [('appchen', 'appchen/client/app.js')],
+    # data_files = [('appchen', 'appchen/client/app.js')],
     license='MIT'
 )
