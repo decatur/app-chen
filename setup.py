@@ -6,6 +6,7 @@ setup(
     name='app-chen',
     version='0.1dev',
     packages=['appchen'],
-    package_data={'appchen': ['client/*', 'client/codemirror/*', 'client/codemirror/addon/edit/*']},
+    # package_data={'appchen': ['client/**/*', 'client/**/**/*']},
+    include_package_data=True,
     license='MIT'
 )
