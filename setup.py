@@ -1,6 +1,11 @@
 from distutils.core import setup
+from setuptools.command.develop import develop
 
 # Stub needed to make pip install from git possible.
+import pathlib
+p = pathlib(__file__).absolute()
+
+print(">>>>>>>>>" + p)
 
 setup(
     name='app-chen',
@@ -15,14 +20,11 @@ setup(
     },
 )
 
-import pathlib
-p = pathlib(__file__).absolute()
-
-print(">>>>>>>>>" + p)
 
 
-def PostInstallCommand():
-    return
-    with ZipFile(p / 'client.zip', 'r') as zipObj:
-        # Extract all the contents of zip file in current directory
-        zipObj.extractall(path=p)
+class PostInstallCommand(develop):
+    """Post-installation for development mode."""
+    def run(self):
+        with ZipFile(p / 'client.zip', 'r') as zipObj:
+            # Extract all the contents of zip file in current directory
+            zipObj.extractall(path=p)
