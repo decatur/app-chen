@@ -3,7 +3,7 @@ from setuptools.command.develop import develop
 
 # Stub needed to make pip install from git possible.
 import pathlib
-p = pathlib(__file__).absolute()
+p = pathlib.Path(__file__).absolute()
 
 print(">>>>>>>>>" + p)
 
