@@ -1,0 +1,39 @@
+<!doctype html>
+
+<title>CodeMirror: JavaScript mode</title>
+<meta charset="utf-8"/>
+<link rel="stylesheet" href="lib/codemirror.css">
+<script src="lib/codemirror.js"></script>
+<script src="addon/edit/matchbrackets.js"></script>
+<script src="mode/javascript/javascript.js"></script>
+<style>
+.CodeMirror {
+    border-top: 1px solid black;
+    border-bottom: 1px solid black;
+    height:40em;
+}
+</style>
+
+<body>
+<form>
+    <button name="save">Save</button>
+    <div id="code"></div>
+</form>
+</body>
+
+<script type="module">
+
+    const editor = CodeMirror(document.getElementById('code'), {
+        lineNumbers: true,
+        matchBrackets: true
+    });
+
+    document.forms[0].save.onclick = function() {
+        alert(editor.getValue());
+    }
+    
+    const data = {a: 1, foo: 'bar'};
+    editor.setValue(JSON.stringify(data, null, 4));
+      
+</script>
+
