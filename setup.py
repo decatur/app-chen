@@ -9,5 +9,19 @@ setup(
     package_data={'appchen': ['client.zip']},
     # include_package_data=True,
     # data_files = [('appchen', 'appchen/client/app.js')],
-    license='MIT'
+    license='MIT',
+    cmdclass={
+        'install': PostInstallCommand
+    },
 )
+
+import pathlib
+p = pathlib(__file__).absolute()
+
+print(">>>>>>>>>" + p)
+
+
+def PostInstallCommand:
+    with ZipFile(p / 'client.zip', 'r') as zipObj:
+        # Extract all the contents of zip file in current directory
+        zipObj.extractall(path=p)
