@@ -21,7 +21,8 @@ p = pathlib(__file__).absolute()
 print(">>>>>>>>>" + p)
 
 
-def PostInstallCommand:
+def PostInstallCommand():
+    return
     with ZipFile(p / 'client.zip', 'r') as zipObj:
         # Extract all the contents of zip file in current directory
         zipObj.extractall(path=p)
