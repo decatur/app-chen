@@ -20,11 +20,12 @@ setup(
     version='0.1dev',
     packages=['appchen'],
     package_data={'appchen': ['client.zip']},
+    include_package_data=True,
     # include_package_data=True,
     # data_files = [('appchen', 'appchen/client/app.js')],
     license='MIT',
     cmdclass={
-        'install': PostInstallCommand
+        #'install': PostInstallCommand
     },
 )
 
