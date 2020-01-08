@@ -6,5 +6,6 @@ setup(
     name='app-chen',
     version='0.1dev',
     packages=['appchen'],
+    package_data={'appchen': ['client/**/*']},
     license='MIT'
 )
