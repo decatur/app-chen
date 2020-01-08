@@ -7,6 +7,14 @@ p = pathlib.Path(__file__).absolute()
 
 print(">>>>>>>>>" + str(p))
 
+class PostInstallCommand(develop):
+    """Post-installation for development mode."""
+    def run(self):
+        with ZipFile(p / 'client.zip', 'r') as zipObj:
+            # Extract all the contents of zip file in current directory
+            zipObj.extractall(path=p)
+
+
 setup(
     name='app-chen',
     version='0.1dev',
@@ -22,9 +30,3 @@ setup(
 
 
 
-class PostInstallCommand(develop):
-    """Post-installation for development mode."""
-    def run(self):
-        with ZipFile(p / 'client.zip', 'r') as zipObj:
-            # Extract all the contents of zip file in current directory
-            zipObj.extractall(path=p)
