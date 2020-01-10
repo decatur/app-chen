@@ -4,36 +4,46 @@ import time
 import itertools
 import pathlib
 from this import d, s
-from flask import Flask, jsonify
+from flask import Flask, jsonify, redirect
 import appchen.server_send_events as sse
-from random import randint
+from random import randint, random
 import datetime
 import pymongo
 
 import appchen.routes as routes
-import appchen.database as database
 
+db = pymongo.MongoClient('localhost:27017', tz_aware=True, serverSelectionTimeoutMS=1000).get_database('appchen')
 
 static_folder = pathlib.Path('./client').resolve()
 # WARNING: When exposing the app to an unsecure location, the static_folder MUST only contain web resources!!!
 app = Flask(__name__, static_folder=static_folder, static_url_path='/')
+app.config['db'] = db
+app.register_blueprint(routes.app, url_prefix='/appchen/client')
 
 transaction_schema = {'type': 'object', 'properties': {
-        'product': {'type': 'string', 'width': 200},
-        'executionTime': {'type': 'string', 'format': 'date-time', 'period': 'SECONDS', 'width': 200},
-        'quantity': {'type': 'number', 'unit': 'MW'},
-        'price': {'type': 'number', 'unit': '€/MWh'}
+        'product': {'columnIndex': 0, 'type': 'string', 'width': 200},
+        'executionTime': {'columnIndex': 3, 'type': 'string', 'format': 'date-time', 'period': 'SECONDS', 'width': 200},
+        'quantity': {'columnIndex': 1, 'title': 'Quantity[MW]', 'type': 'number'},
+        'price': {'columnIndex': 2, 'title': 'Price[€/MWh]', 'type': 'number'},
+        '_id': {'columnIndex': 4, 'type': 'string', 'width': 250}
     }}
+
+
+@app.route("/", methods=['GET'])
+def get_home():
+    return redirect('/appchen/client/myapp.html')
 
 
 @app.route("/transactions", methods=['GET'])
 def get_transactions():
-    cursor = database.db.get_collection('transactions').find({}, sort=[('executionTime', pymongo.ASCENDING)])
+    # Simulate network delay
+    time.sleep(1.0)
+
+    cursor = db.get_collection('transactions').find({}, sort=[('executionTime', pymongo.ASCENDING)])
     transactions = []
 
     for transaction in cursor:
-        transaction['id'] = str(transaction['_id'])
-        del transaction['_id']
+        transaction['_id'] = str(transaction['_id'])
         transactions.append(transaction)
 
     schema = {
@@ -43,7 +53,7 @@ def get_transactions():
     }
 
     if len(transactions):
-        return jsonify(schema=schema, data=transactions, transactionIndex=transactions[-1]['transactionIndex'])
+        return jsonify(schema=schema, data=transactions, _timeLineIndex=transactions[-1]['_timeLineIndex'])
     else:
         return jsonify(schema=schema)
 
@@ -65,18 +75,18 @@ def pump_transactions():
     def target():
         price = randint(400, 600) / 10
         while True:
-            time.sleep(randint(1, 10) / 5)
+            time.sleep(random())
             transaction = dict(
                 product=datetime.datetime(2020, 2, 1, randint(0, 23), 15 * randint(0, 3)).isoformat()[0:16] + 'PT15M',
                 executionTime=datetime.datetime.now(tz=datetime.timezone.utc).isoformat(),
-                quantity=randint(0, 40) / 10,
+                quantity=randint(1, 40) / 10,
                 price=price,
-                transactionIndex=routes.transaction_index
+                _timeLineIndex=routes.time_line_index
             )
-            routes.transaction_index += 1
+            routes.time_line_index += 1
             price += randint(-10, 10) / 10
-            database.db.get_collection('transactions').insert_one(transaction)
-            del transaction['_id']
+            db.get_collection('transactions').insert_one(transaction)
+            transaction['_id'] = str(transaction['_id'])
             sse.broadcast('transaction', transaction)
 
     schema = {'properties': {
@@ -89,9 +99,9 @@ def pump_transactions():
     threading.Thread(target=target).start()
 
 
-database.db.get_collection('transactions').drop()
+# database.db.get_collection('transactions').drop()
+# routes.import_modules(pathlib.Path('../client').resolve())
 pump_zen()
 pump_transactions()
 
-routes.mixin_routes(app)
 werkzeug.serving.run_simple('localhost', 8080, app, threaded=True)

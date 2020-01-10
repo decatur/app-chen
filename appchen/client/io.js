@@ -6,16 +6,18 @@ export function eventing() {
     if (ev) return ev;
 
     ev = {
-        eventSource: new EventSource("/connection"),
+        eventSource: new EventSource("/appchen/client/connection"),
         eventListeners: {},
         connectionId: void 0
     };
+
+    const eventSourcings = [];
 
     ev.subscribe = function () {
         const eventTypes = Object.keys(this.eventListeners);
         if (!eventTypes.length) return;
 
-        fetch('/eventing/subscribe', {
+        fetch('/appchen/client/eventing/subscribe', {
             method: 'POST',
             headers: {'Content-Type': 'application/json; charset=utf-8'},
             body: JSON.stringify({
@@ -56,35 +58,79 @@ export function eventing() {
         const data = JSON.parse(event.data);
         ev.connectionId = data['connectionId'];
         ev.subscribe();
+        for (const config of eventSourcings) {
+            sourceEvents(config);
+        }
     });
 
     /**
-     * @param {SourceEventsConfig} config
+     * @param {AppChenNS.SourceEventsConfig} config
      */
-    ev.sourceEvents = function (config) {
-        // TODO: Lots of issues here.
-        // a) Handle exception in resource handler?
-        // b) Make sure no events are lost. One solution is to, using incrementing transaction numbers,
+    ev.registerEventSourcing = function(config) {
+        eventSourcings.push(config);
+        if (ev.connectionId) {
+            sourceEvents(config);
+        }
+    };
+
+    /**
+     * @param {AppChenNS.SourceEventsConfig} config
+     */
+    function sourceEvents(config) {
+        // We make sure no events are lost. Our solution is to, using a transaction counter,
         //  1. first start the events and queue them
         //  2. then load and handle the resource
         //  3. send the queued events<response to the event handler.
         // This will also insure that the resource handler is called BEFORE any event handler is called.
+        // See also http://matrix.org
 
-        fetch(config.resource.uri)
-            .then(responseToJSON)
-            .then(config.resource.handler)
-            .catch(handleError);
+        let bootState = 0;
+        let eventQueue = [];
+
+        function getState() {
+            fetch(config.resource.uri)
+                .then(responseToJSON)
+                .then(processState)
+                .catch(handleError);
+        }
+
+        function processState(state) {
+            try {
+                config.resource.handler(state);
+            } catch (e) {
+                console.error(e);
+            }
+            for (const e of eventQueue) {
+                if (e._timeLineIndex > state._timeLineIndex) {
+                    processEvent(e);
+                }
+            }
+            eventQueue = void 0;
+            bootState = 2;
+        }
+
+        function processEvent(event) {
+            try {
+                config.topic.handler(event.json);
+            } catch (e) {
+                console.error(e);
+            }
+        }
 
         ev.register({
             [config.topic.uri]: function (event) {
-                try {
-                    config.topic.handler(event.json);
-                } catch (e) {
-                    console.error(e);
+                if (bootState === 2) {
+                    processEvent(event);
+                } else if (bootState === 0) {
+                    eventQueue.push(event);
+                    bootState = 1;
+                    getState();
+                } else if (bootState === 1) {
+                    eventQueue.push(event);
                 }
             }
         });
-    };
+    }
 
     return ev
 }

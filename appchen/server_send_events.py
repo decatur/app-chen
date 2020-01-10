@@ -14,12 +14,11 @@ import collections
 import json
 import secrets
 from queue import Queue
-from typing import List, Dict, Callable
+from typing import List, Dict
 
 _connections = collections.deque()
 _connections_by_event_type = collections.defaultdict(set)
-_retro_events_by_event_type: Dict[str, Callable[[str], None]] = dict()
-_declared_topics: Dict[str, dict] = dict()
+declared_topics: Dict[str, dict] = dict()
 
 
 class Connection:
@@ -61,8 +60,6 @@ def register(connection: Connection, event_type: str):
     """
     # Note that the connection is hashed by its id(), not by its id attribute.
     _connections_by_event_type[event_type].add(connection)
-    if event_type in _retro_events_by_event_type:
-        _retro_events_by_event_type[event_type](connection)
 
 
 def subscribe(connection_id: str, event_types: List[str]):
@@ -71,10 +68,6 @@ def subscribe(connection_id: str, event_types: List[str]):
         raise ValueError(connection_id)
     for event_type in event_types:
         register(connection, event_type)
-
-
-def register_retro_events(event_type: str, func: Callable[[str], None]):
-    _retro_events_by_event_type[event_type] = func
 
 
 def get_connection_by_id(guid: str):
@@ -96,4 +89,4 @@ def broadcast(event_type: str, event: dict):
 
 
 def declare_topic(topic: str, description: str, schema: dict):
-    _declared_topics[topic] = dict(topic=topic, description=description, schema=schema)
+    declared_topics[topic] = dict(topic=topic, description=description, schema=schema)

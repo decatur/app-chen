@@ -1,10 +1,10 @@
-import {initializeApp} from "./app.js"
-import {eventing} from "./io.js";
+import {initializeApp} from "/appchen/client/app.js"
+import {eventing} from "/appchen/client/io.js";
 
 const app = initializeApp([
-    {title: 'The Tab1', src: '/modules/tab1.js'},
-    {title: 'The Tab2', src: './tab2.js'},
-    {title: 'The Tab3', src: '/modules/tab3.js'}]);
+    {title: 'The Tab1', src: '/appchen/client/tab1.js'},
+    {title: 'The Tab2', src: '/appchen/client/tab2.js'},
+    {title: 'The Tab3', src: '/appchen/client/tab3.js'}]);
 
 app.props = {
     start: '2020-01-01',

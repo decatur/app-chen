@@ -1,19 +1,15 @@
 // This is a tab, and as such will export a render(props, container) function.
 
-import "/grid-chen/webcomponent.js";
-import {createView} from "/grid-chen/matrixview.js"
+import "./grid-chen/webcomponent.js";
+import {createView} from "./grid-chen/matrixview.js"
 import {eventing} from "./io.js";
 
 const innerHTML = `
-<section style="height: 10ex;">
-    Last Price: <code class="LastPrice"></code>€/MWh
-    <br/>
-    VWAP: <code class="VWAP"></code>€/MWh
-    <br/>
-    Transaction Count: <code class="TransactionCount"></code>
+<section style="height: 14ex;">
+    <grid-chen class="summaryTable" style="display: block; height: 100%;"></grid-chen>
 </section>
 <section style="flex: 1;">
-   <grid-chen style="height: 100%;"></grid-chen>
+   <grid-chen class="transactionsTable" style="height: 100%;"></grid-chen>
 </section>
 `;
 
@@ -28,18 +24,36 @@ export function render(app, props, container) {
         container.innerHTML = innerHTML;
     }
 
+    const transactionsTable = document.querySelector('.transactionsTable');
+
+    const summarySchema = {
+        'type': 'array',
+        'items': {
+            'type': 'object', 'properties': {
+                'name': {'type': 'string', 'width': 200},
+                'value': {'type': 'number', 'width': 100},
+                'unit': {'type': 'string', 'width': 100}
+            }
+        }
+    };
+    const lastPrice = {name: 'Last Price', unit: '€/MWh'};
+    const vwap = {name: 'VWAP', unit: '€/MWh'};
+    const transactionCount = {name: 'TransactionCount'};
+    const summaryTable = /***/ document.querySelector('.summaryTable');
+    summaryTable.resetFromView(createView(summarySchema, [lastPrice, vwap, transactionCount]));
+
     function displayTransactions() {
-        document.querySelector('grid-chen').resetFromView(createView(model.schema, model.transactions));
-        document.querySelector('.LastPrice').textContent = Intl.NumberFormat().format(model.lastPrice);
-        document.querySelector('.VWAP').textContent = Intl.NumberFormat().format(model.pnl / model.volume);
-        document.querySelector('.TransactionCount').textContent = String(model.transactions.length);
+        transactionsTable.refresh();
+        lastPrice.value = model.lastPrice;
+        vwap.value = model.pnl / model.volume;
+        transactionCount.value = model.transactions.length;
+        summaryTable.refresh();
     }
 
     class Model {
         constructor() {
             /** @type{object[]} */
             this.transactions = [];
-            this.schema = void 0;
             this.lastPrice = NaN;
             this.volume = 0.;
             this.pnl = 0.;
@@ -63,10 +77,10 @@ export function render(app, props, container) {
     const model = new Model();
 
     const ev = eventing();
-    ev.sourceEvents({
+    ev.registerEventSourcing({
         resource: {
             uri: '/transactions', handler: (response) => {
-                model.schema = response.schema;
+                transactionsTable.resetFromView(createView(response.schema, model.transactions));
                 model.addTransactions(response.data);
             }
         },
