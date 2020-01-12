@@ -12,14 +12,20 @@ app.props = {
 };
 
 const ev = eventing();
-ev.register({
-    'zen': function (event) {
-        console.log(event);
-        document.getElementById('status').textContent = event.json.lesson;
-    },
-    'transaction': function (event) {
-        console.log(event);
-        document.getElementById('status').textContent = 'executionTime: ' + event.json.executionTime;
+
+ev.registerEventSourcing({
+    topic: {
+        uri: 'zen', handler: (event) => {
+            document.getElementById('status').textContent = event.lesson;
+        }
+    }
+});
+
+ev.registerEventSourcing({
+    topic: {
+        uri: 'transaction', handler: (event) => {
+            document.getElementById('status').textContent = 'executionTime: ' + event.executionTime;
+        }
     }
 });
 

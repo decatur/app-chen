@@ -1,8 +1,8 @@
 // This is a tab, and as such will export a render(props, container) function.
 
-import "./grid-chen/webcomponent.js";
-import {createView} from "./grid-chen/matrixview.js"
-import {eventing} from "./io.js";
+import "/appchen/client/grid-chen/webcomponent.js";
+import {createView} from "/appchen/client/grid-chen/matrixview.js"
+import {eventing, rerender} from "./io.js";
 
 const innerHTML = `
 <section style="height: 14ex;">
@@ -20,9 +20,13 @@ const innerHTML = `
  * @returns {Promise<undefined>}
  */
 export function render(app, props, container) {
-    if (!container.firstElementChild) {
-        container.innerHTML = innerHTML;
+    if (container.firstElementChild) {
+        // TODO: Move this to app.activateTab
+        rerender();
+        return
     }
+
+    container.innerHTML = innerHTML;
 
     const transactionsTable = document.querySelector('.transactionsTable');
 
@@ -71,7 +75,7 @@ export function render(app, props, container) {
 
     const model = new Model();
 
-    const ev = eventing();
+    const ev = eventing(container);
     ev.registerEventSourcing({
         resource: {
             uri: '/transactions', handler: (response) => {
@@ -86,8 +90,7 @@ export function render(app, props, container) {
         },
         render: () => {
             displayModel();
-        },
-        targetElement: container
+        }
     })
 
 }

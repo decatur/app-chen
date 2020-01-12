@@ -55,10 +55,10 @@ def db_error_handler(error):
     return f'Database connection failed: {str(error)}', 500
 
 
-@app.route("/grid-chen/<filename>", methods=['GET'])
-def get_grid_chen(filename: str):
-    grid_chen: pathlib.Path = pathlib.Path('../grid-chen/grid-chen').absolute()
-    return send_from_directory(grid_chen, filename)
+# @app.route("/grid-chen/<filename>", methods=['GET'])
+# def get_grid_chen(filename: str):
+#     grid_chen: pathlib.Path = pathlib.Path('../grid-chen/grid-chen').absolute()
+#     return send_from_directory(grid_chen, filename)
 
 
 @app.route("/modules", methods=['GET'])
