@@ -29,8 +29,8 @@
 
 <script type="module">
 
-    import "/grid-chen/webcomponent.js";
-    import {createView} from "/grid-chen/matrixview.js"
+    import "/appchen/client/grid-chen/webcomponent.js";
+    import {createView} from "/appchen/client/grid-chen/matrixview.js"
     import {eventing, handleError, responseToJSON, loadLegacyScript, fetchJSON} from "./io.js";
 
     let editor = void 0;
@@ -61,7 +61,7 @@
             alert('Save as what? 🤡');
             return;
         }
-        fetch('/modules/' + key, {
+        fetch('/appchen/client/modules/' + key, {
             method: 'POST',
             headers: {'Content-Type': 'application/json; charset=utf-8'},
             body: JSON.stringify({code: editor.getValue()})
@@ -77,7 +77,7 @@
      * @param {HashChangeEvent} evt
      */
     window.onhashchange = function (evt) {
-        fetchJSON('/modules/' + window.location.hash.substr(1))
+        fetchJSON('/appchen/client/modules/' + window.location.hash.substr(1))
             .then(module => {
                 saveForm.key.value = module.name;
                 editor.setValue(module.code);
@@ -109,24 +109,19 @@
             this.schema = void 0;
         }
 
-        onchanged() {
-            displayModules();
-        }
-
         addModules(modules) {
             modules.forEach(module => {
                 module.name = `[${module.name}](#${module.name})`;
                 this.modules.unshift(module);
             });
-            this.onchanged();
         }
     }
 
     const model = new Model();
     const ev = eventing();
-    ev.sourceEvents({
+    ev.registerEventSourcing({
         resource: {
-            uri: '/modules', handler: (response) => {
+            uri: '/appchen/client/modules', handler: (response) => {
                 model.schema = response.schema;
                 model.addModules(response.modules);
             }
@@ -135,7 +130,8 @@
             uri: 'moduleChanged', handler: (event) => {
                 model.addModules([event]);
             }
-        }
+        },
+        render: displayModules
     });
 
 

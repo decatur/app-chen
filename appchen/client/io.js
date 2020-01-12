@@ -1,7 +1,7 @@
 // TODO: Move to ev object
 const eventSourcings = [];
 let ev = {
-    eventSource: new EventSource("/appchen/client/connection"),
+    eventSource: new EventSource("/appchen/client/eventing/connection"),
     eventListeners: {},
     connectionId: void 0
 };
@@ -128,6 +128,7 @@ function sourceEvents(config) {
     }
 
     function processEvent(event) {
+        if (!event.json) return // This is a sentinell event, ignore it
         try {
             config.topic.handler(event.json);
             if (!isHidden(config)) {
@@ -159,7 +160,7 @@ function sourceEvents(config) {
 }
 
 /**
- * @param {HTMLElement} visibilityElement
+ * @param {HTMLElement?} visibilityElement
  * @returns {{registerEventSourcing(AppChenNS.SourceEventsConfig): void}}
  */
 export function eventing(visibilityElement) {
@@ -169,13 +170,9 @@ export function eventing(visibilityElement) {
          */
         registerEventSourcing(config) {
             config.visibilityElement = visibilityElement || document.body;
-            config.render = config.render || (() => {})
+            config.render = config.render || (() => {});
             ev.registerEventSourcing(config);
         }
-        // ,
-        // register(listenerMap) {
-        //     ev.register(listenerMap);
-        // }
     }
 }
 
