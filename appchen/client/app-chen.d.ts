@@ -2,7 +2,7 @@ declare module AppChenNS {
     export interface SourceEventsConfig {
         resource?: {
             uri: string,
-            handler: (response: object[]) => void;
+            handler: (response: object) => void;
         };
         topic: {
             uri: string,
