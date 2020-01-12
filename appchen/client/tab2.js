@@ -42,7 +42,7 @@ export function render(app, props, container) {
     const summaryTable = /***/ document.querySelector('.summaryTable');
     summaryTable.resetFromView(createView(summarySchema, [lastPrice, vwap, transactionCount]));
 
-    function displayTransactions() {
+    function displayModel() {
         transactionsTable.refresh();
         lastPrice.value = model.lastPrice;
         vwap.value = model.pnl / model.volume;
@@ -59,10 +59,6 @@ export function render(app, props, container) {
             this.pnl = 0.;
         }
 
-        onchanged() {
-            displayTransactions();
-        }
-
         addTransactions(transactions) {
             transactions.forEach(transaction => {
                 this.lastPrice = transaction.price;
@@ -70,7 +66,6 @@ export function render(app, props, container) {
                 this.pnl += transaction.quantity * transaction.price;
                 this.transactions.unshift(transaction);
             });
-            this.onchanged();
         }
     }
 
@@ -88,7 +83,11 @@ export function render(app, props, container) {
             uri: 'transaction', handler: (event) => {
                 model.addTransactions([event]);
             }
-        }
+        },
+        render: () => {
+            displayModel();
+        },
+        targetElement: container
     })
 
 }

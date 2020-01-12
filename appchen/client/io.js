@@ -107,11 +107,19 @@ export function eventing() {
             }
             eventQueue = void 0;
             bootState = 2;
+            if (!document.hidden && config.targetElement.style.display !== 'none') {
+                console.log('sourceEvents.processState -> render');
+                config.render();
+            }
         }
 
         function processEvent(event) {
             try {
                 config.topic.handler(event.json);
+                    if (!document.hidden && config.targetElement.style.display !== 'none') {
+                    console.log('sourceEvents.processEvent -> render');
+                    config.render();
+                }
             } catch (e) {
                 console.error(e);
             }

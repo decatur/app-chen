@@ -8,3 +8,5 @@ This is a client/server web framework:
 * Uses es6 modules and plain vanilla JS
 
 This is work in progress.
+
+dom.EventSource is receiving events even if browser tab is not visible.
