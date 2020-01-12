@@ -1,3 +1,4 @@
+import logging
 import threading
 import werkzeug
 import time
@@ -11,6 +12,8 @@ import datetime
 import pymongo
 
 import appchen.routes as routes
+
+logging.getLogger().setLevel(logging.INFO)
 
 db = pymongo.MongoClient('localhost:27017', tz_aware=True, serverSelectionTimeoutMS=1000).get_database('appchen')
 
@@ -101,7 +104,7 @@ def pump_transactions():
 
 
 # db.get_collection('transactions').drop()
-# routes.import_modules(pathlib.Path('../client').resolve())
+routes.import_modules(pathlib.Path('appchen/client').resolve())
 
 latest = db.get_collection('transactions').find_one({}, sort=[('_timeLineIndex', pymongo.DESCENDING)])
 routes.time_line_index = latest['_timeLineIndex'] if latest else 1

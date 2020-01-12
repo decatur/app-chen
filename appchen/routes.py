@@ -7,7 +7,7 @@ from typing import List
 import datetime
 
 
-from flask import Response, request, jsonify, send_from_directory, Blueprint
+from flask import Response, request, jsonify, Blueprint
 import pymongo
 from pymongo.errors import ServerSelectionTimeoutError
 
@@ -21,7 +21,7 @@ app = Blueprint('appchen', __name__, static_folder='client', static_url_path='')
 
 def on_register(state):
     global db
-    db = state.app.config['db']
+    db = state.app.config.get('db', None)
 
 
 app.record(on_register)
@@ -71,7 +71,7 @@ def get_modules():
             "properties": {
                 "name": {"title": 'Name', "type": 'string', "format": 'uri', "width": 100},
                 "createAt": {
-                    "title": 'Create At', "type": 'string', "format": 'date-time', "period": 'MS', "width": 300
+                    "title": 'Create At', "type": 'string', "format": 'date-time', "period": 'MILLISECONDS', "width": 300
                 },
                 "createBy": {"title": 'Create By', "type": 'string', "width": 200},
                 "id": {"title": 'Id', "type": 'string', "width": 200}
@@ -133,11 +133,15 @@ def eventing_subscribe():
     request_data: dict = request.get_json(force=True)
     connection_id: str = request_data['connectionId']
     event_types: List[str] = request_data['eventTypes']
-    sse.subscribe(connection_id, event_types)
+    connection = sse.get_connection_by_id(connection_id)
+    sse.subscribe(connection, event_types)
+    # Create sentinel event
+    for event_type in event_types:
+        connection.emit(event_type, None)
     return jsonify('Done')
 
 
-@app.route('/connection', methods=['GET'])
+@app.route('/eventing/connection', methods=['GET'])
 def open_connection():
     connection = sse.Connection()
     sse.register(connection, 'zen')

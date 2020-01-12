@@ -12,9 +12,10 @@
 
 import collections
 import json
+import logging
 import secrets
 from queue import Queue
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 _connections = collections.deque()
 _connections_by_event_type = collections.defaultdict(set)
@@ -50,6 +51,7 @@ class Connection:
     def emit(self, event_type: str, event: dict):
         """Emit the event to this connection only."""
         data = json.dumps(event)
+        logging.info(f'emit {event_type} {data}')
         self.queue.put((event_type, data))
 
 
@@ -62,15 +64,14 @@ def register(connection: Connection, event_type: str):
     _connections_by_event_type[event_type].add(connection)
 
 
-def subscribe(connection_id: str, event_types: List[str]):
-    connection = get_connection_by_id(connection_id)
+def subscribe(connection: Connection, event_types: List[str]):
     if connection is None:
-        raise ValueError(connection_id)
+        raise ValueError(connection.id)
     for event_type in event_types:
         register(connection, event_type)
 
 
-def get_connection_by_id(guid: str):
+def get_connection_by_id(guid: str) -> Optional[Connection]:
     """Returns the specified connection"""
     for connection in _connections:
         if connection.id == guid:
@@ -84,6 +85,7 @@ def broadcast(event_type: str, event: dict):
     The event must be serializable by json.dumps()
     """
     data = json.dumps(event)
+    logging.info(f'broadcast {event_type} {data}')
     for connection in _connections_by_event_type[event_type]:
         connection.queue.put((event_type, data))
 
