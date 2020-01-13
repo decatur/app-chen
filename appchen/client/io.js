@@ -1,10 +1,12 @@
 // TODO: Move to ev object
 const eventSourcings = [];
+// TODO: ev should not be a singleton.
 let ev = {
     eventSource: new EventSource("/appchen/client/eventing/connection"),
     eventListeners: {},
     connectionId: void 0
 };
+const eventSource = ev.eventSource;
 
 ev.subscribe = function () {
     const eventTypes = Object.keys(this.eventListeners);
