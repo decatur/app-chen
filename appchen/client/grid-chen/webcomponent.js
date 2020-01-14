@@ -754,7 +754,12 @@ function createGrid(container, viewModel, gridchenElement, tm) {
 
     function showInfo() {
         let dialog = openDialog();
-        const div = document.createElement('div');
+        const container = document.createElement('div');
+        const header = document.createElement('div');
+        header.appendChild(document.createTextNode('-- Press Esc to close dialog -- All Key Bindings conform to Excel Tables --'));
+        container.appendChild(header);
+        const grid = document.createElement('div');
+        container.appendChild(grid);
         const actions = [
             ['Key', 'Action'],
             ['Ctrl+Z', 'Undo last transaction'],
@@ -789,17 +794,18 @@ function createGrid(container, viewModel, gridchenElement, tm) {
             ['Home', 'In input or edit mode, move to the beginning of the text']];
         for (const action of actions) {
             const key = document.createElement('span');
+            // key.style.textAlign = 'right';
             key.textContent = action[0];
-            div.appendChild(key);
+            grid.appendChild(key);
             const desc = document.createElement('span');
             desc.textContent = action[1];
-            div.appendChild(desc);
+            grid.appendChild(desc);
         }
 
-        div.style.display = 'grid';
-        div.style.gridTemplateColumns = 'auto auto';
-        div.style.columnGap = '5px';
-        dialog.appendChild(div);
+        grid.style.display = 'grid';
+        grid.style.gridTemplateColumns = 'auto auto';
+        grid.style.columnGap = '5px';
+        dialog.appendChild(container);
     }
 
     function plot() {
