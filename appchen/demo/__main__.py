@@ -28,8 +28,7 @@ transaction_schema = {'type': 'object', 'properties': {
     'executionTime': {'columnIndex': 3, 'type': 'string', 'format': 'date-time', 'period': 'SECONDS', 'width': 200},
     'quantity': {'columnIndex': 1, 'title': 'Quantity[MW]', 'type': 'number'},
     'price': {'columnIndex': 2, 'title': 'Price[€/MWh]', 'type': 'number'},
-    '_id': {'columnIndex': 4, 'type': 'string', 'width': 250},
-    '_timeLineIndex': {'columnIndex': 5, 'type': 'integer'}
+    '_id': {'columnIndex': 4, 'type': 'string', 'width': 250}
 }}
 
 
@@ -43,7 +42,7 @@ def get_transactions():
     # Simulate network delay
     time.sleep(1.0)
 
-    cursor = db.get_collection('transactions').find({}, sort=[('_timeLineIndex', pymongo.ASCENDING)])
+    cursor = db.get_collection('transactions').find({}, sort=[('executionTime', pymongo.ASCENDING)])
     transactions = []
 
     for transaction in cursor:
@@ -57,7 +56,7 @@ def get_transactions():
     }
 
     if len(transactions):
-        return jsonify(schema=schema, data=transactions, _timeLineIndex=transactions[-1]['_timeLineIndex'])
+        return jsonify(schema=schema, data=transactions, _id=transactions[-1]['_id'])
     else:
         return jsonify(schema=schema)
 
@@ -84,8 +83,7 @@ def pump_transactions():
                 product=datetime.datetime(2020, 2, 1, randint(0, 23), 15 * randint(0, 3)).isoformat()[0:16] + 'PT15M',
                 executionTime=datetime.datetime.now(tz=datetime.timezone.utc).isoformat(),
                 quantity=randint(1, 40) / 10,
-                price=price,
-                _timeLineIndex=routes.time_line_index
+                price=price
             )
             routes.time_line_index += 1
             price += randint(-10, 10) / 10
@@ -106,8 +104,6 @@ def pump_transactions():
 # db.get_collection('transactions').drop()
 routes.import_modules(pathlib.Path('appchen/client').resolve())
 
-latest = db.get_collection('transactions').find_one({}, sort=[('_timeLineIndex', pymongo.DESCENDING)])
-routes.time_line_index = latest['_timeLineIndex'] if latest else 1
 pump_zen()
 pump_transactions()
 

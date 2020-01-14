@@ -116,10 +116,12 @@ function sourceEvents(config) {
         } catch (e) {
             console.error(e);
         }
+
+        const index = eventQueue.findIndex((e => e._id === state._id));
+        // Deduplicate event at index and all before. These must allread be contained in state.
+        eventQueue = eventQueue.slice(index + 1);
         for (const e of eventQueue) {
-            if (e._timeLineIndex > state._timeLineIndex) {
-                processEvent(e);
-            }
+            processEvent(e);
         }
         eventQueue = void 0;
         bootState = 2;

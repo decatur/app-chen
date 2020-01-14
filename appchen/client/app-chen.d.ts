@@ -13,10 +13,8 @@ declare module AppChenNS {
     }
 
     export interface Event {
-        _timeLineIndex: number;
     }
 
     export interface Eventing {
-        _timeLineIndex: number;
     }
 }
