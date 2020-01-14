@@ -6,7 +6,7 @@ let ev = {
     eventListeners: {},
     connectionId: void 0
 };
-const eventSource = ev.eventSource;
+export const eventSource = ev.eventSource;
 
 ev.subscribe = function () {
     const eventTypes = Object.keys(this.eventListeners);
