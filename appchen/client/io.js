@@ -4,7 +4,7 @@ const eventSourcings = [];
 let ev = {
     eventSource: new EventSource("/appchen/client/eventing/connection"),
     topics: new Set(),
-    subscribedTopics: new Set(),
+    // subscribedTopics: new Set(),
     connectionId: void 0
 };
 export const eventSource = ev.eventSource;
@@ -13,11 +13,11 @@ export const eventSource = ev.eventSource;
  * @param {Set<string>} topicsToSubscribe
  */
 ev.subscribe = function (topicsToSubscribe) {
-    const topicCount = this.subscribedTopics.size;
-    topicsToSubscribe.forEach(topic => this.subscribedTopics.add(topic));
-    if (this.subscribedTopics.size === topicCount) {
-        return
-    }
+    // const topicCount = this.subscribedTopics.size;
+    // topicsToSubscribe.forEach(topic => this.subscribedTopics.add(topic));
+    // if (this.subscribedTopics.size === topicCount) {
+    //     return
+    // }
 
     fetch('/appchen/client/eventing/subscribe', {
         method: 'POST',
@@ -53,7 +53,7 @@ ev.eventSource.onerror = function (event) {
 };
 
 ev.eventSource.addEventListener('connection_open', function (event) {
-    ev.subscribedTopics.clear();
+    // ev.subscribedTopics.clear();
     const data = JSON.parse(event.data);
     ev.connectionId = data['connectionId'];
     ev.subscribe(ev.topics);
