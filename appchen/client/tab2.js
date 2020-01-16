@@ -9,7 +9,7 @@ const innerHTML = `
     <grid-chen class="summaryTable" style="display: block; height: 100%;"></grid-chen>
 </section>
 <section style="flex: 1;">
-   <grid-chen class="transactionsTable" style="height: 100%;"></grid-chen>
+   <grid-chen class="transactionsTable" style="display: block; height: 100%;"></grid-chen>
 </section>
 `;
 

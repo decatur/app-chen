@@ -132,12 +132,12 @@ def post_module(name: str):
 def eventing_subscribe():
     request_data: dict = request.get_json(force=True)
     connection_id: str = request_data['connectionId']
-    event_types: List[str] = request_data['eventTypes']
+    topics: List[str] = request_data['topics']
     connection = sse.get_connection_by_id(connection_id)
-    sse.subscribe(connection, event_types)
-    # Create sentinel event
-    for event_type in event_types:
-        connection.emit(event_type, None)
+    sse.subscribe(connection, topics)
+    # Create pre-cursor event
+    for topic in topics:
+        connection.emit(topic, None)
     return jsonify('Done')
 
 
