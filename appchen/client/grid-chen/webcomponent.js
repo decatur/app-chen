@@ -7,9 +7,9 @@
 
 //@ts-check
 
-import { logger, wrap, registerGlobalTransactionManager } from "./utils.js";
-import { createSelection, Range, IndexToPixelMapper } from "./selection.js";
-import { createEditor } from "./editor.js"
+import {logger, wrap, registerGlobalTransactionManager} from "./utils.js";
+import {createSelection, Range, IndexToPixelMapper} from "./selection.js";
+import {createEditor} from "./editor.js"
 
 
 //////////////////////
@@ -66,7 +66,7 @@ const scrollBarWidth = scrollBarThumbWidth + 2 * scrollBarBorderWidth;
 //const numeric = new Set(['number', 'integer']);
 
 function rangeIterator(count) {
-    return Array.from({ length: count }, (_, i) => i);
+    return Array.from({length: count}, (_, i) => i);
 }
 
 
@@ -84,6 +84,29 @@ function openDialog() {
     dialog.showModal();
     return dialog;
 }
+
+let _timeOutHandle;
+
+/**
+ * @param {ResizeObserverEntry[]} entries
+ */
+function debounceResize(entries) {
+    for (const entry of entries) {
+        const gridChen = entry.target;
+        if (_timeOutHandle) {
+            window.clearTimeout(_timeOutHandle);
+         }
+
+        _timeOutHandle = window.setTimeout(() => {
+            _timeOutHandle = void 0;
+            if (gridChen._onresize) gridChen._onresize();
+            gridChen.reset();
+        }, 100);
+    }
+}
+
+const ro = new window.ResizeObserver(entry => debounceResize(entry));
+
 
 /**
  * We export for testability.
@@ -103,18 +126,24 @@ export class GridChen extends HTMLElement {
         this._transactionManager = void 0;
         this.select = void 0;
 
-        const gridChen = this;
-        function debounceResize() {
-            if (gridChen._timeOutHandle) {
-                window.clearTimeout(gridChen._timeOutHandle);
-            }
+        this._onresize = void 0;
 
-            gridChen._timeOutHandle = window.setTimeout(() => {
-                gridChen._timeOutHandle = void 0;
-                gridChen.reset();
-            }, 100);
-        }
-        window.addEventListener('resize', debounceResize);
+        // If recent Firefox supports ResizeObserver, remove this window.onresize stuff.
+        // const gridChen = this;
+        //
+        // function debounceResize() {
+        //     if (gridChen._timeOutHandle) {
+        //         window.clearTimeout(gridChen._timeOutHandle);
+        //     }
+        //
+        //     gridChen._timeOutHandle = window.setTimeout(() => {
+        //         gridChen._timeOutHandle = void 0;
+        //         gridChen.reset();
+        //     }, 100);
+        // }
+        //window.addEventListener('resize', debounceResize);
+
+        ro.observe(this);
     }
 
     /**
@@ -129,7 +158,7 @@ export class GridChen extends HTMLElement {
             this.shadowRoot.removeChild(this.shadowRoot.firstChild);
         } else {
             // First initialize creates shadow dom.
-            this.attachShadow({ mode: 'open' });
+            this.attachShadow({mode: 'open'});
         }
         // Attention: Possible Layout Thrashing.
         // Default value needed for unit testing and flex layouts.
@@ -242,7 +271,7 @@ function createGrid(container, viewModel, gridchenElement, tm, totalHeight) {
         columnEnds[index] = total;
     }
 
-    let viewPortRowCount = Math.max(1, Math.floor((totalHeight) / rowHeight) -1);
+    let viewPortRowCount = Math.max(1, Math.floor((totalHeight) / rowHeight) - 1);
     const viewPortHeight = rowHeight * viewPortRowCount + cellBorderWidth;
     const gridWidth = columnEnds[columnEnds.length - 1] + cellBorderWidth;
     const styleSheet = document.createElement('style');
@@ -263,6 +292,16 @@ function createGrid(container, viewModel, gridchenElement, tm, totalHeight) {
             padding: ${cellPadding}px;
         }
         
+        /** Grid row */
+        .GRID div {
+            position: absolute;
+            height: ${rowHeight}px;
+        }
+        
+        /*.GRID {
+            background-color: red;
+         }*/
+        
         a:link {
             color: var(--a-link-color);
         }
@@ -282,6 +321,15 @@ function createGrid(container, viewModel, gridchenElement, tm, totalHeight) {
             text-align: left;
             border-color: red;
             z-index: 1;
+        }
+        
+        @keyframes bgFadeOut {
+            0% {
+                background-color: red;
+            }
+            100% {
+                background-color: transparent;
+            }
         }
         
         #headerRow {
@@ -313,8 +361,8 @@ function createGrid(container, viewModel, gridchenElement, tm, totalHeight) {
     schemas
         .filter(schema => Math.abs(schema.sortDirection) === 1)
         .slice(1).forEach(function (schema) {
-            delete schema.sortDirection;
-        });
+        delete schema.sortDirection;
+    });
 
     const headerRow = document.createElement('div');
     headerRow.id = 'headerRow';
@@ -338,6 +386,7 @@ function createGrid(container, viewModel, gridchenElement, tm, totalHeight) {
         gridAbstraction.rowCount = rowCount;
         setFirstRow(firstRow);
         scrollBar.setMax(Math.max(viewPortRowCount, rowCount - viewPortRowCount));
+
     }
 
     refreshHeaders();
@@ -350,7 +399,7 @@ function createGrid(container, viewModel, gridchenElement, tm, totalHeight) {
         // Note: First refresh, then commit!
         refresh();
         trans.commit();
-        gridchenElement.dispatchEvent(new CustomEvent('change', { detail: { patch: trans.patches } }));
+        gridchenElement.dispatchEvent(new CustomEvent('change', {detail: {patch: trans.patches}}));
     }
 
     /**
@@ -492,7 +541,7 @@ function createGrid(container, viewModel, gridchenElement, tm, totalHeight) {
         evt.preventDefault();
         // We need to prevent scroll, otherwise the evt coordinates do not relate anymore
         // with the target element coordinates. OR move this after call of index()!
-        container.focus({ preventScroll: true });
+        container.focus({preventScroll: true});
 
         selection.startSelection(/**@type{MouseEvent}*/(evt), cellParent, indexMapper);
     }));
@@ -519,7 +568,7 @@ function createGrid(container, viewModel, gridchenElement, tm, totalHeight) {
     /**
      * @param {FocusEvent} evt
      */
-    container.addEventListener('blur', wrap(gridchenElement,function (evt) {
+    container.addEventListener('blur', wrap(gridchenElement, function (evt) {
         // This is also called by UA if an alert box is shown.
         logger.log('container.onblur: ' + evt);
         if (!container.contains(/** @type {HTMLElement} */(/** @type {FocusEvent} */evt).relatedTarget)) {
@@ -733,7 +782,7 @@ function createGrid(container, viewModel, gridchenElement, tm, totalHeight) {
     function tmListener(patch) {
         viewModel.applyJSONPatch(patch.operations);
         viewModel.updateHolder();
-        const { rowIndex, columnIndex } = /**@type{{rowIndex: number, columnIndex: number}}*/ (patch.detail);
+        const {rowIndex, columnIndex} = /**@type{{rowIndex: number, columnIndex: number}}*/ (patch.detail);
         selection.setRange(rowIndex, columnIndex, 1, 1);
         // TODO: refresh on transaction level!
         refresh();
@@ -748,7 +797,7 @@ function createGrid(container, viewModel, gridchenElement, tm, totalHeight) {
             operations: operations || [],
             pathPrefix: schema.pathPrefix,
             apply: tmListener,
-            detail: { rowIndex: selection.active.rowIndex, columnIndex: selection.active.columnIndex }
+            detail: {rowIndex: selection.active.rowIndex, columnIndex: selection.active.columnIndex}
         };
     }
 
@@ -845,7 +894,7 @@ function createGrid(container, viewModel, gridchenElement, tm, totalHeight) {
             schemas: columnSchemas,
             columns: columns
         });
-        gridchenElement.dispatchEvent(new CustomEvent('plot', { detail: detail }));
+        gridchenElement.dispatchEvent(new CustomEvent('plot', {detail: detail}));
     }
 
     function scrollIntoView(rowIndex, rowIncrement) {
@@ -900,7 +949,7 @@ function createGrid(container, viewModel, gridchenElement, tm, totalHeight) {
             commitTransaction(trans);
         }
 
-        container.focus({ preventScroll: true });
+        container.focus({preventScroll: true});
     }
 
     /** @type {Array<Array<HTMLElement>>} */
@@ -917,6 +966,7 @@ function createGrid(container, viewModel, gridchenElement, tm, totalHeight) {
 
         updateViewportRows(getRangeData(
             new Range(firstRow, 0, viewPortRowCount, colCount)));
+
         selection.show();
     }
 
@@ -930,6 +980,19 @@ function createGrid(container, viewModel, gridchenElement, tm, totalHeight) {
         style.left = (colIndex ? columnEnds[colIndex - 1] : 0) + 'px';
         style.width = schemas[colIndex].width + 'px';
         cellParent.appendChild(elem);
+    }
+
+    // Elements for row highlighting
+    const rowElements = [];
+
+    function createRow(vpRowIndex) {
+        const rowElement = document.createElement('div');
+        let style = rowElement.style;
+        style.top = (vpRowIndex * rowHeight) + 'px';
+        style.left = '0px';
+        style.width = columnEnds[columnEnds.length - 1] + 'px';
+        cellParent.appendChild(rowElement);
+        return rowElement
     }
 
     /**
@@ -1060,10 +1123,34 @@ function createGrid(container, viewModel, gridchenElement, tm, totalHeight) {
     }
 
     function updateViewportRows(matrix) {
-        // log.log('setRowData', rowData)
+        const now = Date.now() / 1000;
         for (let index = 0; index < cellMatrix.length; index++) {
             let elemRow = cellMatrix[index];
+            const rowElement = rowElements[index];
             let row = matrix[index];
+            let customStyle = viewModel.getRowStyles ? viewModel.getRowStyles()[firstRow + index] : null;
+
+            if (customStyle && customStyle.createAt && customStyle.fadeOutDuration) {
+                // Design: We use animation, not transition, because you cannot transition out (fade away)
+                // a css property. To insure that the animation is restarted, we remove the animation and then re-apply
+                // it AFTER (with setTimeout) this task.
+                rowElement.style.removeProperty('animation-name');
+                rowElement.style.removeProperty('animation-duration');
+                rowElement.style.removeProperty('animation-delay');
+                const remainingSeconds = (customStyle.createAt + customStyle.fadeOutDuration - now);
+                if (remainingSeconds > 0) {
+                    window.setTimeout(() => {
+                        rowElement.style.animationName = 'bgFadeOut';
+                        rowElement.style.animationDuration = remainingSeconds + 's';
+                        // Always negative, meaning skip first part of animation.
+                        rowElement.style.animationDelay = (customStyle.createAt - now) + 's';
+                    }, 10);
+                } else {
+                    // Purge the expired style information.
+                    viewModel.getRowStyles()[firstRow + index] = undefined;
+                }
+            }
+
             for (let colIndex = 0; colIndex < colCount; colIndex++) {
                 let elem = elemRow[colIndex];
                 elem.removeAttribute('class');
@@ -1072,16 +1159,16 @@ function createGrid(container, viewModel, gridchenElement, tm, totalHeight) {
                     elem.textContent = '';
                     continue;
                 }
-
                 schemas[colIndex].converter.render(elem, value);
             }
         }
     }
 
-    for (let rowIndex = 0; rowIndex < cellMatrix.length; rowIndex++) {
-        cellMatrix[rowIndex] = Array(colCount);
+    for (let vpRowIndex = 0; vpRowIndex < cellMatrix.length; vpRowIndex++) {
+        rowElements.push(createRow(vpRowIndex));
+        cellMatrix[vpRowIndex] = Array(colCount);
         for (let colIndex = 0; colIndex < colCount; colIndex++) {
-            createCell(rowIndex, colIndex);
+            createCell(vpRowIndex, colIndex);
         }
     }
 
@@ -1163,10 +1250,22 @@ function createGrid(container, viewModel, gridchenElement, tm, totalHeight) {
     };
 
     Object.defineProperty(gridchenElement, '_textContent',
-        { get: () => cellParent.textContent, configurable: true }
+        {get: () => cellParent.textContent, configurable: true}
     );
 
     gridchenElement['refresh'] = refresh;
+
+    // TODO: Move this to MatrixView.
+    gridchenElement['insertEmptyRow'] = function (rowIndex, options) {
+        options = Object.assign({fadeOutDuration: 10000}, options || {});
+        viewModel.splice(rowIndex);
+        if (viewModel.getRowStyles) {
+            viewModel.getRowStyles()[rowIndex] = {
+                createAt: Date.now() / 1000,
+                fadeOutDuration: options.fadeOutDuration
+            };
+        }
+    };
 }
 
 /**
