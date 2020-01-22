@@ -2,9 +2,10 @@
 
 import "/appchen/client/grid-chen/webcomponent.js";
 import {createView} from "/appchen/client/grid-chen/matrixview.js"
-import {eventing, rerender} from "./io.js";
+import * as io from "./io.js";
 
 const innerHTML = `
+<label>Subscription Active <input class="subscribed" type="checkbox" checked></label>
 <section style="height: 14ex;">
     <grid-chen class="summaryTable" style="display: block; height: 100%;"></grid-chen>
 </section>
@@ -15,14 +16,12 @@ const innerHTML = `
 
 /**
  * @param {App} app
- * @param {MyProps} props
+ * @param {object} props
  * @param {HTMLElement} container
  * @returns {Promise<undefined>}
  */
 export function render(app, props, container) {
     if (container.firstElementChild) {
-        // TODO: Move this to app.activateTab
-        rerender();
         return
     }
 
@@ -63,34 +62,45 @@ export function render(app, props, container) {
             this.pnl = 0.;
         }
 
-        addTransactions(transactions) {
-            transactions.forEach(transaction => {
-                this.lastPrice = transaction.price;
-                this.volume += transaction.quantity;
-                this.pnl += transaction.quantity * transaction.price;
-                this.transactions.unshift(transaction);
+        /**
+         * @param {{product:string, price:number, quantity:number}[]} trades
+         */
+        addTrades(trades) {
+            trades.forEach(trade => {
+                this.lastPrice = trade.price;
+                this.volume += trade.quantity;
+                this.pnl += trade.quantity * trade.price;
+                this.transactions.unshift(trade);
             });
         }
     }
 
     const model = new Model();
 
-    const ev = eventing(container);
-    ev.registerEventSourcing({
+    const stream = io.stream(container);
+    const subscription = stream.subscribe({
         resource: {
             uri: '/transactions', handler: (response) => {
                 transactionsTable.resetFromView(createView(response.schema, model.transactions));
-                model.addTransactions(response.data);
+                model.addTrades(response.data);
             }
         },
         topic: {
             uri: 'transaction', handler: (event) => {
-                model.addTransactions([event]);
+                model.addTrades([event]);
             }
         },
         render: () => {
             displayModel();
         }
-    })
+    });
+
+    document.querySelector('.subscribed').onchange = (evt) => {
+        if (evt.target.checked) {
+            subscription.resume();
+        } else {
+            subscription.suspend();
+        }
+    };
 
 }

@@ -6,6 +6,8 @@
 //
 // Tabs must have class names 'tab' and the associated module name.
 
+import * as io from "./io.js";
+
 if (!!window.MSInputMethodContext && !!document['documentMode']) {
     const msg = 'IE11 is not supported. Please use Chrome.';
     alert(msg);
@@ -53,6 +55,7 @@ export function initializeApp(tabs) {
 
         return import(tabId)
             .then((module) => {
+                io.rerender();
                 return module['render'](this, this.props, tab.tabElement);
             })
             .catch((foo) => {

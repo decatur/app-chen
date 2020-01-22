@@ -128,7 +128,7 @@ def post_module(name: str):
     return jsonify(message='Inserted module.')
 
 
-@app.route('/eventing/subscribe', methods=['POST'])
+@app.route('/stream/subscribe', methods=['POST'])
 def eventing_subscribe():
     request_data: dict = request.get_json(force=True)
     connection_id: str = request_data['connectionId']
@@ -141,7 +141,7 @@ def eventing_subscribe():
     return jsonify('Done')
 
 
-@app.route('/eventing/connection', methods=['GET'])
+@app.route('/stream/connection', methods=['GET'])
 def open_connection():
     connection = sse.Connection()
     sse.register(connection, 'zen')

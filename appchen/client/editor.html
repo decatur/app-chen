@@ -20,7 +20,7 @@
     <div style="flex: 1;">
         <form name="saveForm">
             <button title="Save Module" name="save">Save 🐾 my Edits</button>
-            as <input name="key">
+            <label>named as <input name="key"></label>
         </form>
         <div id="code" style="height: 100%;"></div>
     </div>
@@ -31,20 +31,20 @@
 
     import "/appchen/client/grid-chen/webcomponent.js";
     import {createView} from "/appchen/client/grid-chen/matrixview.js"
-    import {eventing, handleError, responseToJSON, loadLegacyScript, fetchJSON} from "./io.js";
+    import * as io from "./io.js";
 
     let editor = void 0;
     const styleSheet = document.createElement('style');
     styleSheet.textContent = '@import url("codemirror/lib/codemirror.css") screen; .CodeMirror {height: 100%;}';
     document.body.appendChild(styleSheet);
-    loadLegacyScript(["codemirror/lib/codemirror.js", "codemirror/addon/edit/matchbrackets.js", "codemirror/mode/javascript/javascript.js"])
+    io.loadLegacyScript(["codemirror/lib/codemirror.js", "codemirror/addon/edit/matchbrackets.js", "codemirror/mode/javascript/javascript.js"])
         .then(() => {
             editor = window['CodeMirror'](document.getElementById('code'), {
                 lineNumbers: true,
                 matchBrackets: true
             });
             if (window.location.hash.substr(1)) {
-                window.onhashchange();
+                window.onhashchange(void 0);
             }
         });
 
@@ -66,18 +66,19 @@
             headers: {'Content-Type': 'application/json; charset=utf-8'},
             body: JSON.stringify({code: editor.getValue()})
         })
-            .then(responseToJSON)
+            .then(io.responseToJSON)
             .then((response) => {
-                // alert(JSON.stringify(response))
+                console.log(JSON.stringify(response));
             })
-            .catch(handleError);
+            .catch(io.handleError);
     };
 
     /**
      * @param {HashChangeEvent} evt
      */
     window.onhashchange = function (evt) {
-        fetchJSON('/appchen/client/modules/' + window.location.hash.substr(1))
+        void evt;
+        io.fetchJSON('/appchen/client/modules/' + window.location.hash.substr(1))
             .then(module => {
                 saveForm.key.value = module.name;
                 editor.setValue(module.code);
@@ -86,7 +87,7 @@
 
     function displayNames() {
         const schema = {title: 'Modules Names', type: 'array', items: model.schema.items.properties.name};
-        const names = Array.from(new Set(model.modules.map(module => module.name)));
+        const names = Array.from(new Set(model.modules.map(module => module['name'])));
         document.querySelector('.modules').resetFromView(createView(schema, names));
     }
 
@@ -118,8 +119,8 @@
     }
 
     const model = new Model();
-    const ev = eventing();
-    ev.registerEventSourcing({
+    const stream = io.stream();
+    stream.subscribe({
         resource: {
             uri: '/appchen/client/modules', handler: (response) => {
                 model.schema = response.schema;

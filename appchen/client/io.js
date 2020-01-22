@@ -2,24 +2,15 @@ const eventSourcings = [];
 
 // TODO: ev should not be a singleton.
 let ev = {
-    eventSource: new EventSource("/appchen/client/eventing/connection"),
-    topics: new Set(),
-    // subscribedTopics: new Set(),
+    eventSource: new EventSource("/appchen/client/stream/connection"),
     connectionId: void 0
 };
-export const eventSource = ev.eventSource;
 
 /**
  * @param {Set<string>} topicsToSubscribe
  */
-ev.subscribe = function (topicsToSubscribe) {
-    // const topicCount = this.subscribedTopics.size;
-    // topicsToSubscribe.forEach(topic => this.subscribedTopics.add(topic));
-    // if (this.subscribedTopics.size === topicCount) {
-    //     return
-    // }
-
-    fetch('/appchen/client/eventing/subscribe', {
+ev.sendTopics = function (topicsToSubscribe) {
+    fetch('/appchen/client/stream/subscribe', {
         method: 'POST',
         headers: {'Content-Type': 'application/json; charset=utf-8'},
         body: JSON.stringify({
@@ -40,8 +31,10 @@ ev.register = function (topic, listener) {
         event.json = JSON.parse(event.data);
         listener(event);
     };
-    this.topics.add(topic);
     this.eventSource.addEventListener(topic, wrapper);
+    return function() {
+        ev.eventSource.removeEventListener(topic, wrapper);
+    }
 };
 
 ev.eventSource.onopen = function (event) {
@@ -56,7 +49,9 @@ ev.eventSource.addEventListener('connection_open', function (event) {
     // ev.subscribedTopics.clear();
     const data = JSON.parse(event.data);
     ev.connectionId = data['connectionId'];
-    ev.subscribe(ev.topics);
+    const topics = new Set();
+    eventSourcings.forEach((s) => s.topic?topics.add(s.topic.uri):void 0);
+    ev.sendTopics(topics);
 });
 
 /**
@@ -65,11 +60,18 @@ ev.eventSource.addEventListener('connection_open', function (event) {
 ev.registerEventSourcing = function (config) {
     eventSourcings.push(config);
     const handler = sourceEventsHandler(config);
-    ev.register(config.topic.uri, handler);
+    const unregister = ev.register(config.topic.uri, handler);
     if (ev.connectionId) {
-        ev.subscribe(new Set([config.topic.uri]));
+        ev.sendTopics(new Set([config.topic.uri]));
     }
+    return unregister
 };
+
+ev.unregisterEventSourcing = function(config) {
+    const index = eventSourcings.findIndex((s) => s.id === config.id);
+    if (index === -1) throw RangeError(config.id);
+    eventSourcings.splice(index, 1);
+}
 
 /**
  * @param {AppChenNS.SourceEventsConfig} config
@@ -172,22 +174,32 @@ function sourceEventsHandler(config) {
     }
 }
 
+let configCounter = 0;
+
 /**
  * @param {HTMLElement?} visibilityElement
- * @returns {{registerEventSourcing(AppChenNS.SourceEventsConfig): void}}
+ * @returns {AppChenNS.Stream}
  */
-export function eventing(visibilityElement) {
-    return {
+export function stream(visibilityElement) {
+    let config;
+    const theStream = {
         /**
          * @param {AppChenNS.SourceEventsConfig} config
          */
-        registerEventSourcing(config) {
+        subscribe(_config) {
+            config = _config;
+            config.id = 'ID' + (configCounter++);
             config.visibilityElement = visibilityElement || document.body;
-            config.render = config.render || (() => {
-            });
-            ev.registerEventSourcing(config);
+            config.render = config.render || (() => {});
+            let suspend = ev.registerEventSourcing(config);
+            return {
+                // TODO: Wow, pretty convoluted. Clean this up!
+                suspend() { suspend() },
+                resume() { suspend = ev.registerEventSourcing(config) }
+            }
         }
-    }
+    };
+    return theStream
 }
 
 /**

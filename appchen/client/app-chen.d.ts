@@ -12,9 +12,13 @@ declare module AppChenNS {
         render: () => void;
     }
 
-    export interface Event {
+    export interface Stream {
+        subscribe: (SourceEventsConfig) => Subscription;
+    }
+    
+    export interface Subscription {
+        suspend: () => void;
+        resume: () => void;
     }
 
-    export interface Eventing {
-    }
 }
