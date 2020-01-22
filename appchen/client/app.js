@@ -2,7 +2,7 @@
 //  A lazy navigation system for a single page application.
 //  Each tab is represented by a JavaScript module. This module must export a function
 //
-// export function render(app: App, props: StrategyProps, container: HTMLElement) {}
+// export function render(props: object, container: HTMLElement) {}
 //
 // Tabs must have class names 'tab' and the associated module name.
 
@@ -56,11 +56,11 @@ export function initializeApp(tabs) {
         return import(tabId)
             .then((module) => {
                 io.rerender();
-                return module['render'](this, this.props, tab.tabElement);
+                return module['render'](this.props, tab.tabElement);
             })
-            .catch((foo) => {
-                console.error(foo);
-                tab.tabElement.textContent = String(foo);
+            .catch((err) => {
+                console.error(err);
+                tab.tabElement.textContent = String(err);
             });
     };
 

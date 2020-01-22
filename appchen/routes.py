@@ -6,13 +6,11 @@ import pathlib
 from typing import List
 import datetime
 
-
 from flask import Response, request, jsonify, Blueprint
 import pymongo
 from pymongo.errors import ServerSelectionTimeoutError
 
 import appchen.server_send_events as sse
-
 
 time_line_index = 1
 db: pymongo.mongo_client.database.Database or None = None
@@ -71,7 +69,8 @@ def get_modules():
             "properties": {
                 "name": {"title": 'Name', "type": 'string', "format": 'uri', "width": 100},
                 "createAt": {
-                    "title": 'Create At', "type": 'string', "format": 'date-time', "period": 'MILLISECONDS', "width": 300
+                    "title": 'Create At', "type": 'string', "format": 'date-time', "period": 'MILLISECONDS',
+                    "width": 300
                 },
                 "createBy": {"title": 'Create By', "type": 'string', "width": 200},
                 "id": {"title": 'Id', "type": 'string', "width": 200}
@@ -108,11 +107,8 @@ def get_module(name: str):
     return jsonify(module)
 
 
-sse.declare_topic(
-    'moduleChanged',
-    'A module was changed',
-    {'properties': {'name': {'type': 'string', 'format': 'uri'}}}
-)
+# schema = {'properties': {'name': {'type': 'string', 'format': 'uri'}}}
+sse.declare_topic('module_upsert', 'A module was created or changed')
 
 
 @app.route("/modules/<name>", methods=['POST'])
@@ -124,7 +120,7 @@ def post_module(name: str):
     module['createAt'] = module['createAt'].isoformat()
     module['id'] = str(module['_id'])
     del module['_id']
-    sse.broadcast('moduleChanged', module)
+    sse.broadcast('module_upsert', module)
     return jsonify(message='Inserted module.')
 
 

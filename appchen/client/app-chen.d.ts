@@ -1,5 +1,5 @@
 declare module AppChenNS {
-    export interface SourceEventsConfig {
+    export interface SubscriptionConfig {
         resource?: {
             uri: string,
             handler: (response: object) => void;
@@ -13,7 +13,11 @@ declare module AppChenNS {
     }
 
     export interface Stream {
-        subscribe: (SourceEventsConfig) => Subscription;
+        subscribe: (SubscriptionConfig) => Subscription;
+        // Listener is called whenever stream is initially connected or re-connected.
+        setOpenListener: (listener:(event: Event) => void) => void;
+        // Listener is called whenever stream is disconnected.
+        setErrorListener: (listener:(event: Event) => void) => void;
     }
     
     export interface Subscription {

@@ -18,12 +18,11 @@ const innerHTML = `
 
 
 /**
- * @param {App} app
  * @param {MyProps} props
  * @param {HTMLElement} container
  * @returns {Promise<undefined>}
  */
-export function render(app, props, container) {
+export function render(props, container) {
     if (!container.firstElementChild) {
         container.innerHTML = innerHTML;
     }

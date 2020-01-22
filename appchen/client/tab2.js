@@ -15,12 +15,11 @@ const innerHTML = `
 `;
 
 /**
- * @param {App} app
  * @param {object} props
  * @param {HTMLElement} container
  * @returns {Promise<undefined>}
  */
-export function render(app, props, container) {
+export function render(props, container) {
     if (container.firstElementChild) {
         return
     }
@@ -63,7 +62,7 @@ export function render(app, props, container) {
         }
 
         /**
-         * @param {{product:string, price:number, quantity:number}[]} trades
+         * @param {{delivery:string, price:number, quantity:number}[]} trades
          */
         addTrades(trades) {
             trades.forEach(trade => {
@@ -80,13 +79,13 @@ export function render(app, props, container) {
     const stream = io.stream(container);
     const subscription = stream.subscribe({
         resource: {
-            uri: '/transactions', handler: (response) => {
+            uri: '/trade_executions', handler: (response) => {
                 transactionsTable.resetFromView(createView(response.schema, model.transactions));
                 model.addTrades(response.data);
             }
         },
         topic: {
-            uri: 'transaction', handler: (event) => {
+            uri: 'trade_execution', handler: (event) => {
                 model.addTrades([event]);
             }
         },

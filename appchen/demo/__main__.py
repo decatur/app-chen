@@ -23,8 +23,8 @@ app = Flask(__name__, static_folder=static_folder, static_url_path='/')
 app.config['db'] = db
 app.register_blueprint(routes.app, url_prefix='/appchen/client')
 
-transaction_schema = {'type': 'object', 'properties': {
-    'product': {'columnIndex': 0, 'type': 'string', 'width': 200},
+trade_execution_schema = {'type': 'object', 'properties': {
+    'delivery': {'columnIndex': 0, 'type': 'string', 'width': 200},
     'executionTime': {'columnIndex': 3, 'type': 'string', 'format': 'date-time', 'period': 'SECONDS', 'width': 200},
     'quantity': {'columnIndex': 1, 'title': 'Quantity[MW]', 'type': 'number'},
     'price': {'columnIndex': 2, 'title': 'Price[€/MWh]', 'type': 'number'},
@@ -37,26 +37,26 @@ def get_home():
     return redirect('/appchen/client/myapp.html')
 
 
-@app.route("/transactions", methods=['GET'])
-def get_transactions():
+@app.route("/trade_executions", methods=['GET'])
+def get_trade_executions():
     # Simulate network delay
     time.sleep(1.0)
 
-    cursor = db.get_collection('transactions').find({}, sort=[('executionTime', pymongo.ASCENDING)])
-    transactions = []
+    cursor = db.get_collection('trade_executions').find({}, sort=[('executionTime', pymongo.ASCENDING)])
+    trades = []
 
-    for transaction in cursor:
-        transaction['_id'] = str(transaction['_id'])
-        transactions.append(transaction)
+    for trade in cursor:
+        trade['_id'] = str(trade['_id'])
+        trades.append(trade)
 
     schema = {
         "title": 'Modules',
         "type": 'array',
-        "items": transaction_schema
+        "items": trade_execution_schema
     }
 
-    if len(transactions):
-        return jsonify(schema=schema, data=transactions, _id=transactions[-1]['_id'])
+    if len(trades):
+        return jsonify(schema=schema, data=trades, _id=trades[-1]['_id'])
     else:
         return jsonify(schema=schema)
 
@@ -69,35 +69,35 @@ def pump_zen():
             time.sleep(5.0)
             sse.broadcast('zen', dict(index=next(index), lesson=next(zen_cycle)))
 
-    schema = {'properties': {'lesson': {'type': 'string'}}}
-    sse.declare_topic('zen', 'A new zen of python every 5 seconds', schema)
+    # schema = {'properties': {'lesson': {'type': 'string'}}}
+    sse.declare_topic('zen', 'A new zen of python every 5 seconds')
     threading.Thread(target=target).start()
 
 
-def pump_transactions():
+def pump_trade_executions():
     def target():
         price = randint(400, 600) / 10
         while True:
             time.sleep(random() * 5)
-            transaction = dict(
-                product=datetime.datetime(2020, 2, 1, randint(0, 23), 15 * randint(0, 3)).isoformat()[0:16] + 'PT15M',
+            trade = dict(
+                delivery=datetime.datetime(2020, 2, 1, randint(0, 23), 15 * randint(0, 3)).isoformat()[0:16] + 'PT15M',
                 executionTime=datetime.datetime.now(tz=datetime.timezone.utc).isoformat(),
                 quantity=randint(1, 40) / 10,
                 price=price
             )
             routes.time_line_index += 1
             price += randint(-10, 10) / 10
-            db.get_collection('transactions').insert_one(transaction)
-            transaction['_id'] = str(transaction['_id'])
-            sse.broadcast('transaction', transaction)
+            db.get_collection('trade_executions').insert_one(trade)
+            trade['_id'] = str(trade['_id'])
+            sse.broadcast('trade_execution', trade)
 
-    schema = {'properties': {
-        'product': {'type': 'string'},
-        'executionTime': {'type': 'string', 'format': 'date-time'},
-        'quantity': {'type': 'number', 'unit': 'MW'},
-        'price': {'type': 'number', 'unit': '€/MWh'}
-    }}
-    sse.declare_topic('transaction', 'A transaction occurred', schema)
+    # schema = {'properties': {
+    #     'product': {'type': 'string'},
+    #     'executionTime': {'type': 'string', 'format': 'date-time'},
+    #     'quantity': {'type': 'number', 'unit': 'MW'},
+    #     'price': {'type': 'number', 'unit': '€/MWh'}
+    # }}
+    sse.declare_topic('trade_execution', 'A trade occurred')
     threading.Thread(target=target).start()
 
 
@@ -105,6 +105,6 @@ def pump_transactions():
 routes.import_modules(pathlib.Path('appchen/client').resolve())
 
 pump_zen()
-pump_transactions()
+pump_trade_executions()
 
 werkzeug.serving.run_simple('localhost', 8080, app, threaded=True)

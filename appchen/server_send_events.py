@@ -79,16 +79,21 @@ def get_connection_by_id(guid: str) -> Optional[Connection]:
     return None
 
 
-def broadcast(event_type: str, event: dict):
+def broadcast(topic: str, event: dict):
     """
     Broadcasts the event to all registered Connections.
     The event must be serializable by json.dumps()
     """
     data = json.dumps(event)
-    logging.info(f'broadcast {event_type} {data}')
-    for connection in _connections_by_event_type[event_type]:
-        connection.queue.put((event_type, data))
+    logging.info(f'broadcast {topic} {data}')
+    if topic not in declared_topics:
+        declared_topics[topic] = dict(topic=topic, description='TODO', example=event)
+    if declared_topics[topic]['example'] is None:
+        declared_topics[topic]['example'] = event
+
+    for connection in _connections_by_event_type[topic]:
+        connection.queue.put((topic, data))
 
 
-def declare_topic(topic: str, description: str, schema: dict):
-    declared_topics[topic] = dict(topic=topic, description=description, schema=schema)
+def declare_topic(topic: str, description: str, example: dict = None):
+    declared_topics[topic] = dict(topic=topic, description=description, example=example)

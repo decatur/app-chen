@@ -1,9 +1,19 @@
-const eventSourcings = [];
+/**
+ * Author: Wolfgang Kühn 2020
+ * Source located at https://github.com/decatur/app-chen/client
+ *
+ * Module implementing support for real time streaming via Server Send Events.
+ *
+ */
 
-// TODO: ev should not be a singleton.
+export const readyStateLabels = [];
+['CLOSED', 'CONNECTING', 'OPEN'].forEach(state => readyStateLabels[EventSource[state]] = state);
+
+// TODO: ev must not be a singleton but be parametrized by its url.
 let ev = {
     eventSource: new EventSource("/appchen/client/stream/connection"),
-    connectionId: void 0
+    connectionId: void 0,
+    subscriptionConfigs: []
 };
 
 /**
@@ -37,29 +47,21 @@ ev.register = function (topic, listener) {
     }
 };
 
-ev.eventSource.onopen = function (event) {
-    // pass
-};
-
-ev.eventSource.onerror = function (event) {
-    // pass
-};
-
 ev.eventSource.addEventListener('connection_open', function (event) {
     // ev.subscribedTopics.clear();
     const data = JSON.parse(event.data);
     ev.connectionId = data['connectionId'];
     const topics = new Set();
-    eventSourcings.forEach((s) => s.topic?topics.add(s.topic.uri):void 0);
+    ev.subscriptionConfigs.forEach((s) => s.topic?topics.add(s.topic.uri):void 0);
     ev.sendTopics(topics);
 });
 
 /**
- * @param {AppChenNS.SourceEventsConfig} config
+ * @param {AppChenNS.SubscriptionConfig} config
  */
 ev.registerEventSourcing = function (config) {
-    eventSourcings.push(config);
-    const handler = sourceEventsHandler(config);
+    ev.subscriptionConfigs.push(config);
+    const handler = subscriptionHandler(config);
     const unregister = ev.register(config.topic.uri, handler);
     if (ev.connectionId) {
         ev.sendTopics(new Set([config.topic.uri]));
@@ -68,13 +70,13 @@ ev.registerEventSourcing = function (config) {
 };
 
 ev.unregisterEventSourcing = function(config) {
-    const index = eventSourcings.findIndex((s) => s.id === config.id);
+    const index = ev.subscriptionConfigs.findIndex((s) => s.id === config.id);
     if (index === -1) throw RangeError(config.id);
-    eventSourcings.splice(index, 1);
-}
+    ev.subscriptionConfigs.splice(index, 1);
+};
 
 /**
- * @param {AppChenNS.SourceEventsConfig} config
+ * @param {AppChenNS.SubscriptionConfig} config
  */
 function isHidden(config) {
     // TODO: config.visibilityElement.hidden is always false. Why?
@@ -82,29 +84,34 @@ function isHidden(config) {
 }
 
 export function rerender() {
+    // TODO: This should be in the app.js module, somehow.
     if (document.hidden) {
         return
     }
 
-    for (const config of eventSourcings) {
+    for (const config of ev.subscriptionConfigs) {
         if (!isHidden(config)) {
             config.render();
         }
     }
 }
 
+// TODO: This should be in the app.js module, somehow.
 document.addEventListener('visibilitychange', rerender);
 
 /**
- * @param {AppChenNS.SourceEventsConfig} config
+ * @param {AppChenNS.SubscriptionConfig} config
  * @returns {function(event)}
  */
-function sourceEventsHandler(config) {
-    // We make sure no events are lost. Our solution is to, using a transaction counter,
+function subscriptionHandler(config) {
+    // We make sure no events are lost. Our solution is to, using a transaction id,
     //  1. first start the events and queue them
     //  2. then load and handle the resource
-    //  3. send the queued events<response to the event handler.
+    //  3. send the queued events not yet subsumed by the response to the event handler.
     // This will also insure that the resource handler is called BEFORE any event handler is called.
+    // The contract is that
+    // * each event has an _id property.
+    // * the state also has an _id property, which is the _id of the latest event subsumed by the state.
     // See also http://matrix.org
 
     let bootState = 0;
@@ -133,7 +140,7 @@ function sourceEventsHandler(config) {
         eventQueue = void 0;
         bootState = 2;
         if (!isHidden(config)) {
-            console.log('sourceEvents.processState -> render');
+            console.log('subscriptionHandler.processState -> render');
             config.render();
         }
     }
@@ -142,7 +149,7 @@ function sourceEventsHandler(config) {
         try {
             config.topic.handler(event.json);
             if (!isHidden(config)) {
-                console.log('sourceEvents.processEvent -> render');
+                console.log('subscriptionHandler.processEvent -> render');
                 config.render();
             }
         } catch (e) {
@@ -182,9 +189,9 @@ let configCounter = 0;
  */
 export function stream(visibilityElement) {
     let config;
-    const theStream = {
+    return {
         /**
-         * @param {AppChenNS.SourceEventsConfig} config
+         * @param {AppChenNS.SubscriptionConfig} _config
          */
         subscribe(_config) {
             config = _config;
@@ -197,9 +204,14 @@ export function stream(visibilityElement) {
                 suspend() { suspend() },
                 resume() { suspend = ev.registerEventSourcing(config) }
             }
+        },
+        setOpenListener(listener) {
+            ev.eventSource.onopen = listener;
+        },
+        setErrorListener(listener) {
+            ev.eventSource.onerror = listener;
         }
-    };
-    return theStream
+    }
 }
 
 /**
