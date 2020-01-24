@@ -70,7 +70,12 @@ def pump_zen():
             sse.broadcast('zen', dict(index=next(index), lesson=next(zen_cycle)))
 
     # schema = {'properties': {'lesson': {'type': 'string'}}}
-    sse.declare_topic('zen', 'A new zen of python every 5 seconds')
+    sse.declare_topic('zen', 'A new zen of python every 5 seconds',
+                      {
+                          "index": 0,
+                          "lesson": "Beautiful is better than ugly."
+                      }
+                      )
     threading.Thread(target=target).start()
 
 
@@ -97,7 +102,13 @@ def pump_trade_executions():
     #     'quantity': {'type': 'number', 'unit': 'MW'},
     #     'price': {'type': 'number', 'unit': '€/MWh'}
     # }}
-    sse.declare_topic('trade_execution', 'A trade occurred')
+    sse.declare_topic('trade_execution', 'A trade occurred. Price is in [€/MWh], quantity is in [MW]', {
+        "_id": "5e2af2115e6d266444f1c69e",
+        "delivery": "2020-02-01T06:45PT15M",
+        "executionTime": "2020-01-24T13:33:05.246293+00:00",
+        "price": 51.7,
+        "quantity": 1.9
+    })
     threading.Thread(target=target).start()
 
 

@@ -108,7 +108,12 @@ def get_module(name: str):
 
 
 # schema = {'properties': {'name': {'type': 'string', 'format': 'uri'}}}
-sse.declare_topic('module_upsert', 'A module was created or changed')
+sse.declare_topic('module_upsert', 'A module was created or changed', {
+    "code": "Some JavaScript es6 module code",
+    "createAt": "2020-01-24T13:37:18.269714+00:00",
+    "id": "5e2af30e5e6d266444f1c703",
+    "name": "tab3"
+})
 
 
 @app.route("/modules/<name>", methods=['POST'])
