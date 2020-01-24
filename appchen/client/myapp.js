@@ -3,9 +3,9 @@ import * as io from "/appchen/client/io.js";
 
 const app = initializeApp([
     {title: 'The Tab1', src: '/appchen/client/tab1.js'},
-    {title: 'The Tab2', src: '/appchen/client/tab2.js'},
+    {title: 'Live Trades', src: '/appchen/client/live-trades.js'},
     {title: 'The Tab3', src: '/appchen/client/modules/tab3.js'},
-    {title: 'Topics', src: '/appchen/client/declared-topics.js'}]);
+    {title: 'Message Discovery', src: '/appchen/client/message-discovery.js'}]);
 
 app.props = {
     start: '2020-01-01',
