@@ -4,10 +4,10 @@ declare module AppChenNS {
             uri: string,
             handler: (response: object) => void;
         };
-        topic: {
+        topics: {
             uri: string,
             handler: (event: object) => void;
-        };
+        }[];
         visibilityElement?: HTMLElement;
         render: () => void;
     }

@@ -84,11 +84,11 @@ export function render(props, container) {
                 model.addTrades(response.data);
             }
         },
-        topic: {
+        topics: [{
             uri: 'trade_execution', handler: (event) => {
                 model.addTrades([event]);
             }
-        },
+        }],
         render: () => {
             displayModel();
         }

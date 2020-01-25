@@ -116,6 +116,6 @@ export function initializeApp(tabs) {
 window.onerror = function (error, url, line) {
     // console.log(Array.prototype.slice.call(arguments).join(' '));
     console.log([error, url, line].join(' '));
-    alert(`While fetching ${url}\n${String(error)}`);
+    // alert(`While fetching ${url}\n${String(error)}`);
 };
 

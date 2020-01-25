@@ -127,11 +127,11 @@
                 model.addModules(response.modules);
             }
         },
-        topic: {
+        topics: [{
             uri: 'module_upsert', handler: (event) => {
                 model.addModules([event]);
             }
-        },
+        }],
         render: displayModules
     });
 

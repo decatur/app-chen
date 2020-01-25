@@ -16,11 +16,11 @@ const statusElement = document.getElementById('status');
 const stream = io.stream();
 
 stream.subscribe({
-    topic: {
+    topics: [{
         uri: 'zen', handler: (zen) => {
             statusElement.textContent = zen['lesson'];
         }
-    }
+    }]
 });
 
 stream.setErrorListener((event) => {

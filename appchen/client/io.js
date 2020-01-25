@@ -42,7 +42,7 @@ ev.register = function (topic, listener) {
         listener(event);
     };
     this.eventSource.addEventListener(topic, wrapper);
-    return function() {
+    return function () {
         ev.eventSource.removeEventListener(topic, wrapper);
     }
 };
@@ -52,24 +52,32 @@ ev.eventSource.addEventListener('connection_open', function (event) {
     const data = JSON.parse(event.data);
     ev.connectionId = data['connectionId'];
     const topics = new Set();
-    ev.subscriptionConfigs.forEach((s) => s.topic?topics.add(s.topic.uri):void 0);
+    ev.subscriptionConfigs.forEach((s) => s.topic ? topics.add(s.topic.uri) : void 0);
     ev.sendTopics(topics);
 });
 
 /**
  * @param {AppChenNS.SubscriptionConfig} config
  */
-ev.registerEventSourcing = function (config) {
+ev.registerSubscription = function (config) {
     ev.subscriptionConfigs.push(config);
     const handler = subscriptionHandler(config);
-    const unregister = ev.register(config.topic.uri, handler);
-    if (ev.connectionId) {
-        ev.sendTopics(new Set([config.topic.uri]));
+    /** @type{function()[]} */
+    const unregisterFuncs = [];
+    for (const topic of config.topics) {
+        unregisterFuncs.push(ev.register(topic.uri, handler));
     }
-    return unregister
+    if (ev.connectionId) {
+        ev.sendTopics(new Set(config.topics.map(topic => topic.uri)));
+    }
+    return function () {
+        for (const unregister of unregisterFuncs) {
+            unregister();
+        }
+    }
 };
 
-ev.unregisterEventSourcing = function(config) {
+ev.unregisterEventSourcing = function (config) {
     const index = ev.subscriptionConfigs.findIndex((s) => s.id === config.id);
     if (index === -1) throw RangeError(config.id);
     ev.subscriptionConfigs.splice(index, 1);
@@ -100,6 +108,7 @@ export function rerender() {
 document.addEventListener('visibilitychange', rerender);
 
 /**
+ * @param {object} precursorTopic
  * @param {AppChenNS.SubscriptionConfig} config
  * @returns {function(event)}
  */
@@ -116,6 +125,10 @@ function subscriptionHandler(config) {
 
     let bootState = 0;
     let eventQueue = [];
+    const topicsByTopic = {};
+    for (const topic of config.topics) {
+        topicsByTopic[topic.uri] = topic;
+    }
 
     function getState() {
         fetch(config.resource.uri)
@@ -147,7 +160,7 @@ function subscriptionHandler(config) {
 
     function processEvent(event) {
         try {
-            config.topic.handler(event.json);
+            topicsByTopic[event.type].handler(event.json);
             if (!isHidden(config)) {
                 console.log('subscriptionHandler.processEvent -> render');
                 config.render();
@@ -197,12 +210,17 @@ export function stream(visibilityElement) {
             config = _config;
             config.id = 'ID' + (configCounter++);
             config.visibilityElement = visibilityElement || document.body;
-            config.render = config.render || (() => {});
-            let suspend = ev.registerEventSourcing(config);
+            config.render = config.render || (() => {
+            });
+            let suspend = ev.registerSubscription(config);
             return {
                 // TODO: Wow, pretty convoluted. Clean this up!
-                suspend() { suspend() },
-                resume() { suspend = ev.registerEventSourcing(config) }
+                suspend() {
+                    suspend()
+                },
+                resume() {
+                    suspend = ev.registerSubscription(config)
+                }
             }
         },
         setOpenListener(listener) {
