@@ -51,9 +51,11 @@ ev.eventSource.addEventListener('connection_open', function (event) {
     // ev.subscribedTopics.clear();
     const data = JSON.parse(event.data);
     ev.connectionId = data['connectionId'];
-    const topics = new Set();
-    ev.subscriptionConfigs.forEach((s) => s.topic ? topics.add(s.topic.uri) : void 0);
-    ev.sendTopics(topics);
+    const topicURIs = new Set();
+    for (const config of ev.subscriptionConfigs) {
+        config.topics.forEach(topic => topicURIs.add(topic.uri));
+    }
+    ev.sendTopics(topicURIs);
 });
 
 /**

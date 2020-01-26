@@ -1,6 +1,6 @@
 <!doctype html>
 <html style="height: 100%;" lang="en">
-<title>App Shell Editor</title>
+<title>App-Chen Weblet Editor</title>
 <meta charset="utf-8"/>
 <style>
     button, input[type="checkbox"] {
@@ -15,11 +15,11 @@
         <form name="displayToggleForm">
             <label><input name="showAll" type="checkbox">Show All</label>
         </form>
-        <grid-chen class="modules" style="height: 100%;"></grid-chen>
+        <grid-chen class="weblets" style="height: 100%;"></grid-chen>
     </div>
     <div style="flex: 1;">
         <form name="saveForm">
-            <button title="Save Module" name="save">Save 🐾 my Edits</button>
+            <button title="Save Weblet" name="save">Save 🐾 my Edits</button>
             <label>named as <input name="key"></label>
         </form>
         <div id="code" style="height: 100%;"></div>
@@ -50,7 +50,7 @@
 
     const toggleForm = document.forms['displayToggleForm'];
     toggleForm.onsubmit = (event) => event.preventDefault();
-    toggleForm.showAll.onchange = displayModules;
+    toggleForm.showAll.onchange = displayWeblets;
 
     const saveForm = document.forms['saveForm'];
     saveForm.onsubmit = (event) => event.preventDefault();
@@ -61,7 +61,7 @@
             alert('Save as what? 🤡');
             return;
         }
-        fetch('/appchen/client/modules/' + key, {
+        fetch('/appchen/client/weblets/' + key, {
             method: 'POST',
             headers: {'Content-Type': 'application/json; charset=utf-8'},
             body: JSON.stringify({code: editor.getValue()})
@@ -78,24 +78,24 @@
      */
     window.onhashchange = function (evt) {
         void evt;
-        io.fetchJSON('/appchen/client/modules/' + window.location.hash.substr(1))
-            .then(module => {
-                saveForm.key.value = module.name;
-                editor.setValue(module.code);
+        io.fetchJSON('/appchen/client/weblets/' + window.location.hash.substr(1))
+            .then(weblet => {
+                saveForm.key.value = weblet.name;
+                editor.setValue(weblet.code);
             });
     };
 
     function displayNames() {
-        const schema = {title: 'Modules Names', type: 'array', items: model.schema.items.properties.name};
-        const names = Array.from(new Set(model.modules.map(module => module['name'])));
-        document.querySelector('.modules').resetFromView(createView(schema, names));
+        const schema = {title: 'Weblet Names', type: 'array', items: model.schema.items.properties.name};
+        const names = Array.from(new Set(model.weblets.map(weblet => weblet['name'])));
+        document.querySelector('.weblets').resetFromView(createView(schema, names));
     }
 
     function displayDetails() {
-        document.querySelector('.modules').resetFromView(createView(model.schema, model.modules));
+        document.querySelector('.weblets').resetFromView(createView(model.schema, model.weblets));
     }
 
-    function displayModules() {
+    function displayWeblets() {
         if (toggleForm.showAll.checked) {
             displayDetails();
         } else {
@@ -106,14 +106,14 @@
     class Model {
         constructor() {
             /** @type{object[]} */
-            this.modules = [];
+            this.weblets = [];
             this.schema = void 0;
         }
 
-        addModules(modules) {
-            modules.forEach(module => {
-                module.name = `[${module.name}](#${module.name})`;
-                this.modules.unshift(module);
+        addWeblets(weblets) {
+            weblets.forEach(weblet => {
+                weblet.name = `[${weblet.name}](#${weblet.name})`;
+                this.weblets.unshift(weblet);
             });
         }
     }
@@ -122,17 +122,17 @@
     const stream = io.stream();
     stream.subscribe({
         resource: {
-            uri: '/appchen/client/modules', handler: (response) => {
+            uri: '/appchen/client/weblets', handler: (response) => {
                 model.schema = response.schema;
-                model.addModules(response.modules);
+                model.addWeblets(response.weblets);
             }
         },
         topics: [{
-            uri: 'module_upsert', handler: (event) => {
-                model.addModules([event]);
+            uri: 'weblet_upsert', handler: (event) => {
+                model.addWeblets([event]);
             }
         }],
-        render: displayModules
+        render: displayWeblets
     });
 
 

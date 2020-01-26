@@ -38,7 +38,7 @@ export function initializeApp(tabs) {
         if (!(tabId in tabsById)) {
             tabId = Object.keys(tabsById)[0];
         }
-        document.getElementById('activeTab').textContent = '...' + tabsById[tabId].tabElement.title + '...';
+        document.getElementById('activeTab').textContent = '🗐 ' + tabsById[tabId].tabElement.title;
 
         console.log('Activate tab ' + tabId);
 

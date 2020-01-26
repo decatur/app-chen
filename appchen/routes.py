@@ -25,27 +25,27 @@ def on_register(state):
 app.record(on_register)
 
 
-def import_modules(src_dir: pathlib.Path):
+def import_weblets(src_dir: pathlib.Path):
     """Initializes the database."""
-    logging.warning(f'Dropping modules collection from database')
-    collection: pymongo.collection.Collection = db.get_collection('modules')
+    logging.warning(f'Dropping weblets collection from database')
+    collection: pymongo.collection.Collection = db.get_collection('weblets')
     collection.drop()
-    logging.info(f'Importing modules from {src_dir.resolve()}')
-    modules = src_dir.glob('*.js')
-    for path in modules:
-        logging.info(f'Importing module {path}')
-        module = dict(
+    logging.info(f'Importing weblets from {src_dir.resolve()}')
+    weblets = src_dir.glob('*.js')
+    for path in weblets:
+        logging.info(f'Importing weblet {path}')
+        weblet = dict(
             code=path.read_text(encoding='utf8'),
             name=path.stem,
             createAt=datetime.datetime.utcnow(),
             createBy='importer'
         )
-        collection.insert_one(module)
+        collection.insert_one(weblet)
 
 
-def current_module(name: str):
-    """Returns the latest module of the specified name."""
-    return db.get_collection('modules').find_one({"name": name}, sort=[('createAt', pymongo.DESCENDING)])
+def current_weblet(name: str):
+    """Returns the latest weblet of the specified name."""
+    return db.get_collection('weblets').find_one({"name": name}, sort=[('createAt', pymongo.DESCENDING)])
 
 
 @app.errorhandler(ServerSelectionTimeoutError)
@@ -59,10 +59,10 @@ def db_error_handler(error):
 #     return send_from_directory(grid_chen, filename)
 
 
-@app.route("/modules", methods=['GET'])
-def get_modules():
+@app.route("/weblets", methods=['GET'])
+def get_weblets():
     schema = {
-        "title": 'Modules',
+        "title": 'Weblets',
         "type": 'array',
         "items": {
             "type": 'object',
@@ -78,37 +78,37 @@ def get_modules():
         }
     }
 
-    modules_cursor = db.get_collection('modules').find({}, sort=[('createAt', pymongo.ASCENDING)])
-    modules = []
-    for module in modules_cursor:
-        module['id'] = str(module['_id'])
-        del module['_id']
-        create_at: datetime.datetime = module['createAt']
-        module['createAt'] = create_at.isoformat()
-        modules.append(module)
+    weblets_cursor = db.get_collection('weblets').find({}, sort=[('createAt', pymongo.ASCENDING)])
+    weblets = []
+    for weblet in weblets_cursor:
+        weblet['id'] = str(weblet['_id'])
+        del weblet['_id']
+        create_at: datetime.datetime = weblet['createAt']
+        weblet['createAt'] = create_at.isoformat()
+        weblets.append(weblet)
 
-    return jsonify(schema=schema, modules=modules)
-
-
-@app.route("/modules/<name>.js", methods=['GET'])
-def get_module_code(name: str):
-    module = current_module(name)
-    if module is None:
-        return jsonify(error='Module not found'), 404
-    return Response(response=module['code'], mimetype="application/javascript; charset=utf-8")
+    return jsonify(schema=schema, weblets=weblets)
 
 
-@app.route("/modules/<name>", methods=['GET'])
-def get_module(name: str):
-    module = current_module(name)
-    if module is None:
-        return jsonify(error='Module not found'), 404
-    del module['_id']
-    return jsonify(module)
+@app.route("/weblets/<name>.js", methods=['GET'])
+def get_weblet_code(name: str):
+    weblet = current_weblet(name)
+    if weblet is None:
+        return jsonify(error='weblet not found'), 404
+    return Response(response=weblet['code'], mimetype="application/javascript; charset=utf-8")
+
+
+@app.route("/weblets/<name>", methods=['GET'])
+def get_weblet(name: str):
+    weblet = current_weblet(name)
+    if weblet is None:
+        return jsonify(error='Weblet not found'), 404
+    del weblet['_id']
+    return jsonify(weblet)
 
 
 # schema = {'properties': {'name': {'type': 'string', 'format': 'uri'}}}
-sse.declare_topic('module_upsert', 'A module was created or changed', {
+sse.declare_topic('weblet_upsert', 'A weblet was created or changed', {
     "code": "Some JavaScript es6 module code",
     "createAt": "2020-01-24T13:37:18.269714+00:00",
     "id": "5e2af30e5e6d266444f1c703",
@@ -116,17 +116,17 @@ sse.declare_topic('module_upsert', 'A module was created or changed', {
 })
 
 
-@app.route("/modules/<name>", methods=['POST'])
-def post_module(name: str):
-    module: dict = request.get_json(force=True)
-    module['name'] = name
-    module['createAt'] = datetime.datetime.now(tz=datetime.timezone.utc)
-    db.get_collection('modules').insert_one(module)
-    module['createAt'] = module['createAt'].isoformat()
-    module['id'] = str(module['_id'])
-    del module['_id']
-    sse.broadcast('module_upsert', module)
-    return jsonify(message='Inserted module.')
+@app.route("/weblets/<name>", methods=['POST'])
+def post_weblet(name: str):
+    weblet: dict = request.get_json(force=True)
+    weblet['name'] = name
+    weblet['createAt'] = datetime.datetime.now(tz=datetime.timezone.utc)
+    db.get_collection('weblets').insert_one(weblet)
+    weblet['createAt'] = weblet['createAt'].isoformat()
+    weblet['id'] = str(weblet['_id'])
+    del weblet['_id']
+    sse.broadcast('weblet_upsert', weblet)
+    return jsonify(message='Inserted weblet.')
 
 
 @app.route('/stream/subscribe', methods=['POST'])
