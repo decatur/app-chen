@@ -167,8 +167,9 @@ def pump_keep_alive_or_let_die():
 
 
 sse.declare_topic('keep_alive_or_let_die',
-                  """Event send each 10 seconds. 
-Needed to (1) prevent HTTP proxy timeouts and (2) needed to detect closed connections via GeneratorExit""", {
+                  """Event send each 10 seconds on each connection without explicitly subscribing to it.
+Needed to (1) prevent HTTP proxy timeouts and (2) needed to detect closed connections via GeneratorExit.""",
+                  {
                       "threadCount": 7
                   })
 
