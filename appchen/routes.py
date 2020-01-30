@@ -3,6 +3,8 @@
 
 import logging
 import pathlib
+import threading
+import time
 from typing import List
 import datetime
 
@@ -145,7 +147,7 @@ def eventing_subscribe():
 @app.route('/stream/connection', methods=['GET'])
 def open_connection():
     connection = sse.Connection()
-    sse.register(connection, 'zen')
+    sse.register(connection, 'keep_alive_or_let_die')
     connection.emit('connection_open', dict(connectionId=connection.id))
     return Response(connection.event_generator(), mimetype="text/event-stream")
 
@@ -153,3 +155,21 @@ def open_connection():
 @app.route('/topics', methods=['GET'])
 def get_topics():
     return jsonify(list(sse.declared_topics.values()))
+
+
+def pump_keep_alive_or_let_die():
+    def target():
+        while True:
+            time.sleep(10)
+            sse.broadcast('keep_alive_or_let_die', dict(threadCount=threading.active_count()))
+
+    threading.Thread(target=target).start()
+
+
+sse.declare_topic('keep_alive_or_let_die',
+                  """Event send each 10 seconds. 
+Needed to (1) prevent HTTP proxy timeouts and (2) needed to detect closed connections via GeneratorExit""", {
+                      "threadCount": 7
+                  })
+
+pump_keep_alive_or_let_die()
