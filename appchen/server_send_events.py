@@ -9,7 +9,8 @@
 
     Usage see routes.py
 """
-
+import threading
+import time
 import collections
 import json
 import logging
@@ -20,6 +21,7 @@ from typing import List, Dict, Optional
 _connections = collections.deque()
 _connections_by_event_type = collections.defaultdict(set)
 declared_topics: Dict[str, dict] = dict()
+_keep_alive_thread: threading.Thread = None
 
 
 class Connection:
@@ -62,6 +64,8 @@ def register(connection: Connection, event_type: str):
     """
     # Note that the connection is hashed by its id(), not by its id attribute.
     _connections_by_event_type[event_type].add(connection)
+    if _keep_alive_thread is None or not _keep_alive_thread.is_alive():
+        pump_keep_alive_or_let_die()
 
 
 def subscribe(connection: Connection, event_types: List[str]):
@@ -97,3 +101,22 @@ def broadcast(topic: str, event: dict):
 
 def declare_topic(topic: str, description: str, example: dict = None):
     declared_topics[topic] = dict(topic=topic, description=description, example=example)
+
+
+def pump_keep_alive_or_let_die():
+    global _keep_alive_thread
+
+    def target():
+        while len(_connections_by_event_type):
+            time.sleep(10)
+            broadcast('keep_alive_or_let_die', dict(threadCount=threading.active_count()))
+
+    _keep_alive_thread = threading.Thread(target=target).start()
+
+
+declare_topic('keep_alive_or_let_die',
+              """Event send each 10 seconds on each connection without explicitly subscribing to it.
+Needed to (1) prevent HTTP proxy timeouts and (2) needed to detect closed connections via GeneratorExit.""",
+              {
+                  "threadCount": 7
+              })
