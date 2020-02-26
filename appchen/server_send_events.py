@@ -15,6 +15,7 @@ import collections
 import json
 import logging
 import secrets
+import datetime
 from queue import Queue
 from typing import List, Dict, Optional
 
@@ -109,9 +110,12 @@ def pump_keep_alive_or_let_die():
     def target():
         while len(_connections_by_event_type):
             time.sleep(10)
-            broadcast('keep_alive_or_let_die', dict(threadCount=threading.active_count()))
+            broadcast('keep_alive_or_let_die', dict(
+                datetime=datetime.datetime.utcnow().isoformat() + 'Z',
+                threadCount=threading.active_count()))
 
-    _keep_alive_thread = threading.Thread(target=target).start()
+    _keep_alive_thread = threading.Thread(target=target)
+    _keep_alive_thread.start()
 
 
 declare_topic('keep_alive_or_let_die',
