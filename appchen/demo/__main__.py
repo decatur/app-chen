@@ -113,7 +113,7 @@ def pump_trade_executions():
 
 
 # db.get_collection('transactions').drop()
-routes.import_modules(pathlib.Path('appchen/client').resolve())
+# routes.import_modules(pathlib.Path('appchen/client').resolve())
 
 pump_zen()
 pump_trade_executions()
