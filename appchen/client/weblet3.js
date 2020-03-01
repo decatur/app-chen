@@ -1,7 +1,7 @@
 // This is a Weblet module.
 
 const innerHTML = `
-<style>.tab3 label {display: block;}</style>
+<style>.weblet3 label {display: block;}</style>
 <section style="height: 10ex;">
     Data Binding
     <form style="columns: 2">

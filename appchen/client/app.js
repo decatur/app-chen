@@ -1,10 +1,7 @@
-// *
 //  A lazy navigation system for a single page application.
-//  Each tab is represented by a JavaScript module. This module must export a function
-//
-// export function render(props: object, container: HTMLElement) {}
-//
-// Tabs must have class names 'tab' and the associated module name.
+//  Each weblet is represented by a JavaScript module. This module must export a function
+//      export function render(weblet) {}
+
 
 if (!!window.MSInputMethodContext && !!document['documentMode']) {
     const msg = 'IE11 is not supported. Please use Chrome.';
@@ -14,87 +11,88 @@ if (!!window.MSInputMethodContext && !!document['documentMode']) {
 
 /**
  *
- * @param {{title: string, src: string}[]} tabs
- * @returns {{eventListeners: {}, eventSource: EventSource, activeTabId: string, connectionId: *, props: {}}}
+ * @param {{title: string, src: string}[]} webletInfos
  */
-export function initializeApp(tabs) {
+export function initializeApp(webletInfos) {
 
     const app = {
         props: {},
         /** @type{string} */
-        activeTabId: void 0,
+        activeWebletId: void 0
     };
 
     /** @type{AppChenNS.WebletCollection} */
-    const tabsById = /**@type{AppChenNS.WebletCollection}*/ {};
+    const webletsById = /**@type{AppChenNS.WebletCollection}*/ {};
 
     /**
-     * @param {string?} tabId
+     * @param {string?} id
      * @returns {Promise}
      */
-    app.activateTabFromHash = function (tabId) {
-        tabId = tabId || location.hash.substr(1);
-        if (!(tabId in tabsById)) {
-            tabId = Object.keys(tabsById)[0];
+    app.activateWebletFromHash = function (id) {
+        id = id || location.hash.substr(1);
+        if (!(id in webletsById)) {
+            id = Object.keys(webletsById)[0];
         }
-        document.getElementById('activeTab').textContent = '🗐 ' + tabsById[tabId].element.title;
+        document.getElementById('activeWeblet').textContent = '🗐 ' + webletsById[id].element.title;
 
-        console.log('Activate tab ' + tabId);
+        console.log('Activate Weblet ' + id);
 
-        for (let tab of Object.values(tabsById)) {
-            tab.element.style.display = 'none';
-            tab.navElement.className = 'nav';
+        for (let weblet of Object.values(webletsById)) {
+            weblet.element.style.display = 'none';
+            weblet.navElement.className = 'nav';
         }
 
         /** @type{AppChenNS.Weblet} */
-        const tab = tabsById[tabId];
-        tab.element.style.display = tab.display;
-        tab.navElement.className = 'activeNav';
-        window.location.hash = '#' + tabId;
-        app.activeTabId = tabId;
+        const weblet = webletsById[id];
+        weblet.element.style.display = weblet.display;
+        weblet.navElement.className = 'activeNav';
+        window.location.hash = '#' + id;
+        app.activeWebletId = id;
 
-        return import(tabId)
+        return import(id)
             .then((module) => {
-                return module['render'](tab, tab.element);
+                return module['render'](weblet, weblet.element);
             })
             .catch((err) => {
                 console.error(err);
-                tab.element.textContent = String(err);
+                weblet.element.textContent = String(err);
             });
     };
 
-    function createTabs() {
+    function createWebLets() {
         /** @type{HTMLDialogElement} */
         const dialogElement = /** @type{HTMLDialogElement} */(document.getElementById('menu'));
 
-        for (const tab of tabs) {
-            const id = tab.src;
-            const tabElement = document.createElement('div');
-            tabElement.title = tab.title;
-            tabElement.className = 'tab';
-            document.body.appendChild(tabElement);
+        for (const webletInfo of webletInfos) {
+            const id = webletInfo.src;
+            const webletElement = document.createElement('div');
+            webletElement.title = webletInfo.title;
+            webletElement.className = 'weblet';
+            document.body.appendChild(webletElement);
 
             const navElement = document.createElement('button');
             navElement.value = id;
             navElement.className = 'nav';
-            navElement.textContent = tabElement.title;
+            navElement.textContent = webletElement.title;
             dialogElement.firstElementChild.appendChild(navElement);
-            tabsById[id] = {
-                id, element: tabElement, navElement,
-                display: tabElement.style.display || 'flex',
-                props: app.props
+            webletsById[id] = {
+                id, element: webletElement, navElement,
+                display: webletElement.style.display || 'flex',
+                props: app.props,
+                isVisible() {
+                    return !document.hidden && this.element.style.display !== 'none'
+                }
             };
         }
 
         dialogElement.onclose = function () {
             dialogElement.classList.remove('menu-opens');
-            if (dialogElement.returnValue && dialogElement.returnValue !== app.activeTabId) {
-                app.activateTabFromHash(dialogElement.returnValue);
+            if (dialogElement.returnValue && dialogElement.returnValue !== app.activeWebletId) {
+                app.activateWebletFromHash(dialogElement.returnValue);
             }
         };
 
-        //document.getElementById('activeTab').onmouseenter =
-        document.getElementById('activeTab').onclick = () => {
+        document.getElementById('activeWeblet').onclick = () => {
             dialogElement.classList.add('menu-opens');
             dialogElement.showModal();
         };
@@ -116,14 +114,14 @@ export function initializeApp(tabs) {
             return
         }
 
-        for (const tab of tabs) {
-            if (tab.displayModel) tab.displayModel();
+        for (const weblet of Object.values(webletsById)) {
+            if (weblet.displayModel) weblet.displayModel();
         }
     }
 
     document.addEventListener('visibilitychange', rerender);
 
-    createTabs();
+    createWebLets();
 
     return app
 }
@@ -134,12 +132,6 @@ window.onerror = function (error, url, line) {
     alert(error);
 };
 
-/**
- * @param {HTMLElement} element
- */
-export function isHidden(element) {
-    return document.hidden || element.style.display === 'none'
-}
 
 
 

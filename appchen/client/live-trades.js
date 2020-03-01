@@ -3,7 +3,6 @@
 import "/appchen/client/grid-chen/webcomponent.js";
 import {createView} from "/appchen/client/grid-chen/matrixview.js"
 import * as io from "./io.js";
-import * as app from "./app.js";
 
 const innerHTML = `
 <label>Subscription Active <input class="subscribed" type="checkbox" checked></label>
@@ -39,15 +38,16 @@ export function render(weblet, container) {
         }
     };
     const lastPrice = {name: 'Last Price', unit: '€/MWh'};
+    // Volume Weighted Average Price
     const vwap = {name: 'VWAP', unit: '€/MWh'};
     const transactionCount = {name: 'TransactionCount'};
-    const summaryTable = /***/ document.querySelector('.summaryTable');
+    const summaryTable = document.querySelector('.summaryTable');
     summaryTable.resetFromView(createView(summarySchema, [lastPrice, vwap, transactionCount]));
 
     weblet.displayModel = displayModel;
 
     function displayModel() {
-        if (!model.hasChanged || app.isHidden(container)) {
+        if (!model.hasChanged || !weblet.isVisible()) {
             return;
         }
         transactionsTable.refresh();
@@ -83,9 +83,7 @@ export function render(weblet, container) {
     }
 
     const model = new Model();
-
-    const stream = io.stream();
-    const subscription = stream.subscribe({
+    const subscription = io.stream().subscribe({
         'trade_executions_state': (state) => {
             transactionsTable.resetFromView(createView(state.schema, model.transactions));
             model.addTrades(state.data);
