@@ -1,4 +1,4 @@
-// This is a tab, and as such will export a render(props, container) function.
+// This is a Weblet module.
 
 const innerHTML = `
 <style>.tab3 label {display: block;}</style>
@@ -18,16 +18,15 @@ const innerHTML = `
 
 
 /**
- * @param {MyProps} props
- * @param {HTMLElement} container
+ * @param {AppChenNS.Weblet} weblet
  * @returns {Promise<undefined>}
  */
-export function render(props, container) {
-    if (!container.firstElementChild) {
-        container.innerHTML = innerHTML;
+export function render(weblet) {
+    if (!weblet.element.firstElementChild) {
+        weblet.element.innerHTML = innerHTML;
     }
 
-    const form = container.querySelector('form');
-    form['start'].value = props.start;
-    form['end'].value = props.end;
+    const form = weblet.element.querySelector('form');
+    form['start'].value = weblet.props['start'];
+    form['end'].value = weblet.props['end'];
 }

@@ -50,7 +50,7 @@
 
     const toggleForm = document.forms['displayToggleForm'];
     toggleForm.onsubmit = (event) => event.preventDefault();
-    toggleForm.showAll.onchange = displayWeblets;
+    toggleForm.showAll.onchange = displayModel;
 
     const saveForm = document.forms['saveForm'];
     saveForm.onsubmit = (event) => event.preventDefault();
@@ -95,7 +95,7 @@
         document.querySelector('.weblets').resetFromView(createView(model.schema, model.weblets));
     }
 
-    function displayWeblets() {
+    function displayModel() {
         if (toggleForm.showAll.checked) {
             displayDetails();
         } else {
@@ -121,18 +121,16 @@
     const model = new Model();
     const stream = io.stream();
     stream.subscribe({
-        resource: {
-            uri: '/appchen/client/weblets', handler: (response) => {
-                model.schema = response.schema;
-                model.addWeblets(response.weblets);
-            }
-        },
-        topics: [{
-            uri: 'weblet_upsert', handler: (event) => {
-                model.addWeblets([event]);
-            }
-        }],
-        render: displayWeblets
+        'weblets_state': (response) => {
+            model.schema = response.schema;
+            model.addWeblets(response.weblets);
+            displayModel();
+        }
+        ,
+        'weblet_upsert': (event) => {
+            model.addWeblets([event]);
+            displayModel();
+        }
     });
 
 

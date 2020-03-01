@@ -1,4 +1,4 @@
-// This is a tab, and as such will export a render(props, container) function.
+// This is a Weblet module.
 
 const innerHTML = `
 <section style="height: 15ex;">
@@ -18,12 +18,11 @@ const innerHTML = `
 
 
 /**
- * @param {MyProps} props
- * @param {HTMLElement} container
- * @returns {Promise<undefined>}
+ * @param {AppChenNS.Weblet} weblet
+ * @returns {Promise<*>}
  */
-export function render(props, container) {
-    if (!container.firstElementChild) {
-        container.innerHTML = innerHTML;
+export function render(weblet) {
+    if (!weblet.element.firstElementChild) {
+        weblet.element.innerHTML = innerHTML;
     }
 }

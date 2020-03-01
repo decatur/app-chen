@@ -8,6 +8,13 @@ This is a client/server web framework based an Python and modern JavaScript.
 * Depends on Flask and MongoDB only
 * Uses es6 modules and plain vanilla JavaScript
 
+# Setup
+
+````shell script
+ /c/ws/tools/python3/python -m venv venv
+ ````
+
+
 # Running the demo
 
 ````shell script

@@ -47,8 +47,6 @@ class EventSource:
 #     messages = SSEClient('http://localhost:8080/appchen/client/stream/connection')
 #     for evt in messages:
 #         print(evt.event)
-#         if evt.data == 'null':
-#             continue  # Legacy
 #
 #         if evt.event == 'connection_open':
 #             data: dict = json.loads(evt.data)
@@ -75,8 +73,6 @@ class EventSource:
 
 # def my_handler(self, event: Event):
 #     print(event.event)
-#     if event.data == 'null':
-#         return  # Legacy
 #
 #     if event.event == 'connection_open':
 #         data: dict = json.loads(event.data)
@@ -98,7 +94,7 @@ def on_connection_open(event: Event):
     print(data['connectionId'])
     r = requests.post('http://localhost:8080/appchen/client/stream/subscribe', data=json.dumps({
         'connectionId': data['connectionId'],
-        'topics': ['zen']
+        'topics': ['zen', 'trade_executions_state', 'trade_execution']
     }))
     print(r.text)
 
@@ -108,5 +104,17 @@ def on_zen(event: Event):
     print(data)
 
 
+def on_trade_execution(event: Event):
+    data: dict = json.loads(event.data)
+    print(data)
+
+
+def on_trade_executions_state(event: Event):
+    data: dict = json.loads(event.data)
+    print(data)
+
+
 event_source.add_event_listener('connection_open', on_connection_open)
 event_source.add_event_listener('zen', on_zen)
+event_source.add_event_listener('trade_execution', on_trade_execution)
+event_source.add_event_listener('trade_executions_state', on_trade_executions_state)

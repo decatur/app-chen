@@ -16,6 +16,8 @@ time_line_index = 1
 db: pymongo.mongo_client.database.Database or None = None
 app = Blueprint('appchen', __name__, static_folder='client', static_url_path='')
 
+resources = dict()
+
 
 def on_register(state):
     global db
@@ -53,14 +55,7 @@ def db_error_handler(error):
     return f'Database connection failed: {str(error)}', 500
 
 
-# @app.route("/grid-chen/<filename>", methods=['GET'])
-# def get_grid_chen(filename: str):
-#     grid_chen: pathlib.Path = pathlib.Path('../grid-chen/grid-chen').absolute()
-#     return send_from_directory(grid_chen, filename)
-
-
-@app.route("/weblets", methods=['GET'])
-def get_weblets():
+def weblets():
     schema = {
         "title": 'Weblets',
         "type": 'array',
@@ -87,7 +82,11 @@ def get_weblets():
         weblet['createAt'] = create_at.isoformat()
         weblets.append(weblet)
 
-    return jsonify(schema=schema, weblets=weblets)
+    return dict(schema=schema, weblets=weblets)
+
+@app.route("/weblets", methods=['GET'])
+def get_weblets():
+    return jsonify(weblets())
 
 
 @app.route("/weblets/<name>.js", methods=['GET'])
@@ -130,15 +129,16 @@ def post_weblet(name: str):
 
 
 @app.route('/stream/subscribe', methods=['POST'])
-def eventing_subscribe():
+def post_subscribe():
     request_data: dict = request.get_json(force=True)
     connection_id: str = request_data['connectionId']
     topics: List[str] = request_data['topics']
     connection = sse.get_connection_by_id(connection_id)
-    sse.subscribe(connection, topics)
-    # Create pre-cursor event
     for topic in topics:
-        connection.emit(topic, None)
+        if topic.endswith('_state') and topic in resources:
+            connection.emit(topic, resources[topic]())
+
+    sse.subscribe(connection, topics)
     return jsonify('Done')
 
 
@@ -153,3 +153,6 @@ def open_connection():
 @app.route('/topics', methods=['GET'])
 def get_topics():
     return jsonify(list(sse.declared_topics.values()))
+
+
+resources['weblets_state'] = weblets

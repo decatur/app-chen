@@ -6,8 +6,6 @@
 //
 // Tabs must have class names 'tab' and the associated module name.
 
-import * as io from "./io.js";
-
 if (!!window.MSInputMethodContext && !!document['documentMode']) {
     const msg = 'IE11 is not supported. Please use Chrome.';
     alert(msg);
@@ -27,7 +25,8 @@ export function initializeApp(tabs) {
         activeTabId: void 0,
     };
 
-    const tabsById = {};
+    /** @type{AppChenNS.WebletCollection} */
+    const tabsById = /**@type{AppChenNS.WebletCollection}*/ {};
 
     /**
      * @param {string?} tabId
@@ -38,34 +37,34 @@ export function initializeApp(tabs) {
         if (!(tabId in tabsById)) {
             tabId = Object.keys(tabsById)[0];
         }
-        document.getElementById('activeTab').textContent = '🗐 ' + tabsById[tabId].tabElement.title;
+        document.getElementById('activeTab').textContent = '🗐 ' + tabsById[tabId].element.title;
 
         console.log('Activate tab ' + tabId);
 
         for (let tab of Object.values(tabsById)) {
-            tab.tabElement.style.display = 'none';
+            tab.element.style.display = 'none';
             tab.navElement.className = 'nav';
         }
 
+        /** @type{AppChenNS.Weblet} */
         const tab = tabsById[tabId];
-        tab.tabElement.style.display = tab.display;
+        tab.element.style.display = tab.display;
         tab.navElement.className = 'activeNav';
         window.location.hash = '#' + tabId;
         app.activeTabId = tabId;
 
         return import(tabId)
             .then((module) => {
-                io.rerender();
-                return module['render'](this.props, tab.tabElement);
+                return module['render'](tab, tab.element);
             })
             .catch((err) => {
                 console.error(err);
-                tab.tabElement.textContent = String(err);
+                tab.element.textContent = String(err);
             });
     };
 
     function createTabs() {
-         /** @type{HTMLDialogElement} */
+        /** @type{HTMLDialogElement} */
         const dialogElement = /** @type{HTMLDialogElement} */(document.getElementById('menu'));
 
         for (const tab of tabs) {
@@ -80,7 +79,11 @@ export function initializeApp(tabs) {
             navElement.className = 'nav';
             navElement.textContent = tabElement.title;
             dialogElement.firstElementChild.appendChild(navElement);
-            tabsById[id] = {id, tabElement, navElement, display: tabElement.style.display || 'flex'};
+            tabsById[id] = {
+                id, element: tabElement, navElement,
+                display: tabElement.style.display || 'flex',
+                props: app.props
+            };
         }
 
         dialogElement.onclose = function () {
@@ -108,6 +111,18 @@ export function initializeApp(tabs) {
         });
     }
 
+    function rerender() {
+        if (document.hidden) {
+            return
+        }
+
+        for (const tab of tabs) {
+            if (tab.displayModel) tab.displayModel();
+        }
+    }
+
+    document.addEventListener('visibilitychange', rerender);
+
     createTabs();
 
     return app
@@ -118,4 +133,13 @@ window.onerror = function (error, url, line) {
     console.log([error, url, line].join(' '));
     alert(error);
 };
+
+/**
+ * @param {HTMLElement} element
+ */
+export function isHidden(element) {
+    return document.hidden || element.style.display === 'none'
+}
+
+
 

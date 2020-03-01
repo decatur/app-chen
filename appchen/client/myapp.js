@@ -4,24 +4,21 @@ import * as io from "/appchen/client/io.js";
 const app = initializeApp([
     {title: 'The Tab1', src: '/appchen/client/tab1.js'},
     {title: 'Live Trades', src: '/appchen/client/live-trades.js'},
-    {title: 'The Tab3', src: '/appchen/client/modules/tab3.js'},
+    {title: 'The Tab3', src: '/appchen/client/weblets/tab3.js'},
     {title: 'Message Discovery', src: '/appchen/client/message-discovery.js'}]);
 
-app.props = {
-    start: '2020-01-01',
-    end: '2021-01-01'
-};
+app.props['start'] = '2020-01-01';
+app.props['end'] = '2021-01-01';
 
 const statusElement = document.getElementById('status');
 const stream = io.stream();
 
 stream.subscribe({
-    topics: [{
-        uri: 'zen', handler: (zen) => {
-            statusElement.textContent = zen['lesson'];
+        'zen': (data) => {
+            statusElement.textContent = data['lesson'];
         }
-    }]
-});
+    }
+);
 
 stream.setErrorListener((event) => {
     const eventSource = event.target;

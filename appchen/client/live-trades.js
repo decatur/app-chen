@@ -1,8 +1,9 @@
-// This is a tab, and as such will export a render(props, container) function.
+// This is a Weblet module.
 
 import "/appchen/client/grid-chen/webcomponent.js";
 import {createView} from "/appchen/client/grid-chen/matrixview.js"
 import * as io from "./io.js";
+import * as app from "./app.js";
 
 const innerHTML = `
 <label>Subscription Active <input class="subscribed" type="checkbox" checked></label>
@@ -15,17 +16,16 @@ const innerHTML = `
 `;
 
 /**
- * @param {object} props
+ * @param {AppChenNS.Weblet} weblet
  * @param {HTMLElement} container
- * @returns {Promise<undefined>}
+ * @returns {Promise<*>}
  */
-export function render(props, container) {
+export function render(weblet, container) {
     if (container.firstElementChild) {
-        return
+        return Promise.resolve();
     }
 
     container.innerHTML = innerHTML;
-
     const transactionsTable = document.querySelector('.transactionsTable');
 
     const summarySchema = {
@@ -44,12 +44,18 @@ export function render(props, container) {
     const summaryTable = /***/ document.querySelector('.summaryTable');
     summaryTable.resetFromView(createView(summarySchema, [lastPrice, vwap, transactionCount]));
 
+    weblet.displayModel = displayModel;
+
     function displayModel() {
+        if (!model.hasChanged || app.isHidden(container)) {
+            return;
+        }
         transactionsTable.refresh();
         lastPrice.value = model.lastPrice;
         vwap.value = model.pnl / model.volume;
         transactionCount.value = model.transactions.length;
         summaryTable.refresh();
+        model.hasChanged = false;
     }
 
     class Model {
@@ -59,6 +65,7 @@ export function render(props, container) {
             this.lastPrice = NaN;
             this.volume = 0.;
             this.pnl = 0.;
+            this.hasChanged = true;
         }
 
         /**
@@ -71,25 +78,21 @@ export function render(props, container) {
                 this.pnl += trade.quantity * trade.price;
                 this.transactions.unshift(trade);
             });
+            this.hasChanged = (trades.length > 0);
         }
     }
 
     const model = new Model();
 
-    const stream = io.stream(container);
+    const stream = io.stream();
     const subscription = stream.subscribe({
-        resource: {
-            uri: '/trade_executions', handler: (response) => {
-                transactionsTable.resetFromView(createView(response.schema, model.transactions));
-                model.addTrades(response.data);
-            }
+        'trade_executions_state': (state) => {
+            transactionsTable.resetFromView(createView(state.schema, model.transactions));
+            model.addTrades(state.data);
+            displayModel();
         },
-        topics: [{
-            uri: 'trade_execution', handler: (event) => {
-                model.addTrades([event]);
-            }
-        }],
-        render: () => {
+        'trade_execution': (event) => {
+            model.addTrades([event]);
             displayModel();
         }
     });

@@ -1,19 +1,27 @@
 declare module AppChenNS {
-    export interface SubscriptionConfig {
-        resource?: {
-            uri: string,
-            handler: (response: object) => void;
-        };
-        topics: {
-            uri: string,
-            handler: (event: object) => void;
-        }[];
-        visibilityElement?: HTMLElement;
-        render: () => void;
+
+    export interface Weblet {
+        id: string;
+        // title: string;
+        element: HTMLElement;
+        navElement: HTMLElement;
+        display: string;
+        props: object;
+        displayModel?: () => void;
+    }
+
+    export type RenderType = (weblet: Weblet, container: HTMLElement) => Promise<any>;
+
+    export interface WebletCollection {
+        [index: string]: Weblet;
+    }
+
+    export interface SubscriptionHandlers {
+        [index: string]: (event: object) => void;
     }
 
     export interface Stream {
-        subscribe: (SubscriptionConfig) => Subscription;
+        subscribe: (config: SubscriptionHandlers) => Subscription;
         // Listener is called whenever stream is initially connected or re-connected.
         setOpenListener: (listener:(event: Event) => void) => void;
         // Listener is called whenever stream is disconnected.

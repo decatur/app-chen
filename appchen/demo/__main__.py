@@ -37,8 +37,7 @@ def get_home():
     return redirect('/appchen/client/myapp.html')
 
 
-@app.route("/trade_executions", methods=['GET'])
-def get_trade_executions():
+def trade_executions_state():
     # Simulate network delay
     time.sleep(1.0)
 
@@ -55,10 +54,12 @@ def get_trade_executions():
         "items": trade_execution_schema
     }
 
-    if len(trades):
-        return jsonify(schema=schema, data=trades, _id=trades[-1]['_id'])
-    else:
-        return jsonify(schema=schema)
+    return dict(schema=schema, data=trades)
+
+
+@app.route("/trade_executions", methods=['GET'])
+def get_trade_executions():
+    return jsonify(trade_executions_state())
 
 
 def pump_zen():
@@ -113,9 +114,10 @@ def pump_trade_executions():
 
 
 # db.get_collection('transactions').drop()
-# routes.import_modules(pathlib.Path('appchen/client').resolve())
 
 pump_zen()
 pump_trade_executions()
+
+routes.resources['trade_executions_state'] = trade_executions_state
 
 werkzeug.serving.run_simple('localhost', 8080, app, threaded=True)
