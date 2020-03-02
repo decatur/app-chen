@@ -7,8 +7,8 @@ declare module AppChenNS {
         navElement: HTMLElement;
         display: string;
         props: object;
-        displayModel?: () => void;
         isVisible: () => boolean;
+        module: object;
     }
 
     export type RenderType = (weblet: Weblet, container: HTMLElement) => Promise<any>;

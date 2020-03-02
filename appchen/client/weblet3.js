@@ -19,12 +19,16 @@ const innerHTML = `
 
 /**
  * @param {AppChenNS.Weblet} weblet
- * @returns {Promise<undefined>}
  */
 export function render(weblet) {
-    if (!weblet.element.firstElementChild) {
-        weblet.element.innerHTML = innerHTML;
-    }
+}
+
+/**
+ * @param {AppChenNS.Weblet} weblet
+ * @returns {Promise<undefined>}
+ */
+export function init(weblet) {
+    weblet.element.innerHTML = innerHTML;
 
     const form = weblet.element.querySelector('form');
     form['start'].value = weblet.props['start'];

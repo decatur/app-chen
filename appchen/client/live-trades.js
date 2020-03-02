@@ -14,93 +14,92 @@ const innerHTML = `
 </section>
 `;
 
+const summarySchema = {
+    'type': 'array',
+    'items': {
+        'type': 'object', 'properties': {
+            'name': {'type': 'string', 'width': 200},
+            'value': {'type': 'number', 'width': 100},
+            'unit': {'type': 'string', 'width': 100}
+        }
+    }
+};
+const lastPrice = {name: 'Last Price', unit: '€/MWh'};
+// Volume Weighted Average Price
+const vwap = {name: 'VWAP', unit: '€/MWh'};
+const transactionCount = {name: 'TransactionCount'};
+let summaryTable;
+let transactionsTable;
+
+class Model {
+    constructor() {
+        /** @type{object[]} */
+        this.transactions = [];
+        this.lastPrice = NaN;
+        this.volume = 0.;
+        this.pnl = 0.;
+        this.hasChanged = true;
+    }
+
+    /**
+     * @param {{delivery:string, price:number, quantity:number}[]} trades
+     */
+    addTrades(trades) {
+        trades.forEach(trade => {
+            this.lastPrice = trade.price;
+            this.volume += trade.quantity;
+            this.pnl += trade.quantity * trade.price;
+            this.transactions.unshift(trade);
+        });
+        this.hasChanged = (trades.length > 0);
+    }
+}
+
+const model = new Model();
+
+/**
+ * @param {AppChenNS.Weblet} weblet
+ */
+export function render(weblet) {
+    if (!(model.hasChanged && weblet.isVisible())) {
+        return
+    }
+    transactionsTable.refresh();
+    lastPrice.value = model.lastPrice;
+    vwap.value = model.pnl / model.volume;
+    transactionCount.value = model.transactions.length;
+    summaryTable.refresh();
+    model.hasChanged = false;
+}
+
 /**
  * @param {AppChenNS.Weblet} weblet
  * @param {HTMLElement} container
  * @returns {Promise<*>}
  */
-export function render(weblet, container) {
-    if (container.firstElementChild) {
-        return Promise.resolve();
-    }
-
+export function init(weblet, container) {
     container.innerHTML = innerHTML;
-    const transactionsTable = document.querySelector('.transactionsTable');
-
-    const summarySchema = {
-        'type': 'array',
-        'items': {
-            'type': 'object', 'properties': {
-                'name': {'type': 'string', 'width': 200},
-                'value': {'type': 'number', 'width': 100},
-                'unit': {'type': 'string', 'width': 100}
-            }
-        }
-    };
-    const lastPrice = {name: 'Last Price', unit: '€/MWh'};
-    // Volume Weighted Average Price
-    const vwap = {name: 'VWAP', unit: '€/MWh'};
-    const transactionCount = {name: 'TransactionCount'};
-    const summaryTable = document.querySelector('.summaryTable');
+    summaryTable = container.querySelector('.summaryTable');
     summaryTable.resetFromView(createView(summarySchema, [lastPrice, vwap, transactionCount]));
+    transactionsTable = container.querySelector('.transactionsTable');
 
-    weblet.displayModel = displayModel;
-
-    function displayModel() {
-        if (!model.hasChanged || !weblet.isVisible()) {
-            return;
-        }
-        transactionsTable.refresh();
-        lastPrice.value = model.lastPrice;
-        vwap.value = model.pnl / model.volume;
-        transactionCount.value = model.transactions.length;
-        summaryTable.refresh();
-        model.hasChanged = false;
-    }
-
-    class Model {
-        constructor() {
-            /** @type{object[]} */
-            this.transactions = [];
-            this.lastPrice = NaN;
-            this.volume = 0.;
-            this.pnl = 0.;
-            this.hasChanged = true;
-        }
-
-        /**
-         * @param {{delivery:string, price:number, quantity:number}[]} trades
-         */
-        addTrades(trades) {
-            trades.forEach(trade => {
-                this.lastPrice = trade.price;
-                this.volume += trade.quantity;
-                this.pnl += trade.quantity * trade.price;
-                this.transactions.unshift(trade);
-            });
-            this.hasChanged = (trades.length > 0);
-        }
-    }
-
-    const model = new Model();
     const subscription = io.stream().subscribe({
         'trade_executions_state': (state) => {
             transactionsTable.resetFromView(createView(state.schema, model.transactions));
             model.addTrades(state.data);
-            displayModel();
+            render(weblet);
         },
         'trade_execution': (event) => {
             model.addTrades([event]);
-            displayModel();
+            render(weblet);
         }
     });
 
-    document.querySelector('.subscribed').onchange = (evt) => {
+    container.querySelector('.subscribed').onchange = (evt) => {
         if (evt.target.checked) {
             subscription.resume();
         } else {
             subscription.suspend();
         }
     };
-
 }

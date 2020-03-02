@@ -16,13 +16,16 @@ const innerHTML = `
 </section>
 `;
 
+/**
+ * @param {AppChenNS.Weblet} weblet
+ */
+export function render(weblet) {
+}
 
 /**
  * @param {AppChenNS.Weblet} weblet
  * @returns {Promise<*>}
  */
-export function render(weblet) {
-    if (!weblet.element.firstElementChild) {
-        weblet.element.innerHTML = innerHTML;
-    }
+export function init(weblet) {
+    weblet.element.innerHTML = innerHTML;
 }

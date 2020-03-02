@@ -18,7 +18,10 @@ export function initializeApp(webletInfos) {
     const app = {
         props: {},
         /** @type{string} */
-        activeWebletId: void 0
+        activeWebletId: void 0,
+        activeWeblet() {
+            return webletsById[this.activeWebletId]
+        }
     };
 
     /** @type{AppChenNS.WebletCollection} */
@@ -49,14 +52,19 @@ export function initializeApp(webletInfos) {
         window.location.hash = '#' + id;
         app.activeWebletId = id;
 
-        return import(id)
-            .then((module) => {
-                return module['render'](weblet, weblet.element);
-            })
-            .catch((err) => {
-                console.error(err);
-                weblet.element.textContent = String(err);
-            });
+        if (weblet.module) {
+            return weblet.module.render(weblet);
+        } else {
+            import(id)
+                .then((module) => {
+                    weblet.module = module;
+                    return module.init(weblet, weblet.element);
+                })
+                .catch((err) => {
+                    console.error(err);
+                    weblet.element.textContent = String(err);
+                });
+        }
     };
 
     function createWebLets() {
@@ -115,7 +123,7 @@ export function initializeApp(webletInfos) {
         }
 
         for (const weblet of Object.values(webletsById)) {
-            if (weblet.displayModel) weblet.displayModel();
+            weblet.module.render();
         }
     }
 
