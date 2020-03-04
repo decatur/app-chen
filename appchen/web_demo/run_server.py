@@ -7,12 +7,12 @@ import itertools
 import pathlib
 from this import d, s
 from flask import Flask, jsonify, redirect
-import appchen.server_send_events as sse
+import appchen.eventsource.server_send_events as sse
+import appchen.eventsource.routes as routes
 from random import randint, random
 import datetime
 import pymongo
 
-import appchen.routes as routes
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -104,7 +104,6 @@ def pump_trade_executions():
                 quantity=randint(1, 40) / 10,
                 price=price
             )
-            routes.time_line_index += 1
             price += randint(-10, 10) / 10
             db.get_collection('trade_executions').insert_one(trade)
             trade['id'] = str(trade['_id'])
