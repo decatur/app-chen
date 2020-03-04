@@ -122,15 +122,13 @@ export function initializeApp(webletInfos) {
             return
         }
 
-        for (const weblet of Object.values(webletsById)) {
+        for (const weblet of Object.values(webletsById).filter(weblet => weblet.module)) {
             weblet.module.render();
         }
     }
 
     document.addEventListener('visibilitychange', rerender);
-
     createWebLets();
-
     return app
 }
 
