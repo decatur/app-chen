@@ -4,8 +4,7 @@ const innerHTML = `
 <section style="height: 15ex;">
     section 1 with fixed height
     <ul>
-        <li><a href="../client/editor.html" target="Edit">Edit</a></li>
-        <li><a href="topics" target="topics">topics</a></li>
+        <li><a href="/appchen/client/editor.html" target="Edit">Edit</a></li>
     </ul>
 </section>
 <section style="flex: 1;">
@@ -18,6 +17,7 @@ const innerHTML = `
 
 /**
  * @param {AppChenNS.Weblet} weblet
+ * @returns {Promise<*>}
  */
 export function render(weblet) {
 }

@@ -22,15 +22,11 @@ const innerHTML = `
 
 
 /**
- * @param {MyProps} props
+ * @param {AppChenNS.Weblet} weblet
  * @param {HTMLElement} container
- * @returns {Promise<undefined>}
+ * @returns {Promise<*>}
  */
-export function render(props, container) {
-    if (container.firstElementChild) {
-        return
-    }
-
+export function init(weblet, container) {
     container.innerHTML = innerHTML;
 
     function renderTopic(elem, topic) {

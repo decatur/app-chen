@@ -25,7 +25,7 @@ export function render(weblet) {
 
 /**
  * @param {AppChenNS.Weblet} weblet
- * @returns {Promise<undefined>}
+ * @returns {Promise<*>}
  */
 export function init(weblet) {
     weblet.element.innerHTML = innerHTML;
