@@ -1,5 +1,5 @@
 """
-    server_send_events.py
+    server.py
 
     Implements the server side of server send events.
     A Connection represents the HTTP connection initiated by a client (Browser) over which the events are send.

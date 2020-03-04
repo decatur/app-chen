@@ -41,5 +41,5 @@ You may now navigate to http://localhost:8080 with Chrome or Firefox.
 # Run Demo Python Client
 
 ````shell script
-python -m appchen.eventsource.client_demo --httpport=8080
+python -m appchen.server_send_events.client_demo --httpport=8080
 ````

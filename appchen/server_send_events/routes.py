@@ -10,7 +10,7 @@ from flask import Response, request, jsonify, Blueprint
 import pymongo
 from pymongo.errors import ServerSelectionTimeoutError
 
-import appchen.eventsource.server_send_events as sse
+import appchen.server_send_events.server as sse
 
 db: pymongo.mongo_client.database.Database or None = None
 app = Blueprint('appchen', __name__, static_folder='../web_client', static_url_path='')

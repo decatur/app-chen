@@ -4,7 +4,7 @@ import logging
 
 import requests
 
-from appchen.eventsource.client import EventSource, Event
+from appchen.server_send_events.client import EventSource, Event
 
 
 logging.getLogger().setLevel(logging.DEBUG)

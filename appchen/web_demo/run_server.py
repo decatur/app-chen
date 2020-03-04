@@ -7,8 +7,8 @@ import itertools
 import pathlib
 from this import d, s
 from flask import Flask, jsonify, redirect
-import appchen.eventsource.server_send_events as sse
-import appchen.eventsource.routes as routes
+import appchen.server_send_events.server as sse
+import appchen.server_send_events.routes as routes
 from random import randint, random
 import datetime
 import pymongo
