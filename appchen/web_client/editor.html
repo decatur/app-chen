@@ -29,8 +29,8 @@
 
 <script type="module">
 
-    import "/appchen/client/grid-chen/webcomponent.js";
-    import {createView} from "/appchen/client/grid-chen/matrixview.js"
+    import "/appchen/web_client/grid-chen/webcomponent.js";
+    import {createView} from "/appchen/web_client/grid-chen/matrixview.js"
     import * as io from "./io.js";
 
     let editor = void 0;
@@ -61,7 +61,7 @@
             alert('Save as what? 🤡');
             return;
         }
-        fetch('/appchen/client/weblets/' + key, {
+        fetch('/appchen/web_client/weblets/' + key, {
             method: 'POST',
             headers: {'Content-Type': 'application/json; charset=utf-8'},
             body: JSON.stringify({code: editor.getValue()})
@@ -78,7 +78,7 @@
      */
     window.onhashchange = function (evt) {
         void evt;
-        io.fetchJSON('/appchen/client/weblets/' + window.location.hash.substr(1))
+        io.fetchJSON('/appchen/web_client/weblets/' + window.location.hash.substr(1))
             .then(weblet => {
                 saveForm.key.value = weblet.name;
                 editor.setValue(weblet.code);

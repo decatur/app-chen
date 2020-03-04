@@ -1,8 +1,8 @@
 // This is a Weblet module.
 
-import "/appchen/client/grid-chen/webcomponent.js";
-import {createView} from "/appchen/client/grid-chen/matrixview.js"
-import * as io from "/appchen/client/io.js";
+import "/appchen/web_client/grid-chen/webcomponent.js";
+import {createView} from "/appchen/web_client/grid-chen/matrixview.js"
+import * as io from "/appchen/web_client/io.js";
 
 const innerHTML = `
 <label>Subscription Active <input class="subscribed" type="checkbox" checked></label>

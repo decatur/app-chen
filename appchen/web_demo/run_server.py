@@ -34,7 +34,7 @@ static_folder = pathlib.Path(__file__).parent.resolve()
 # WARNING: When exposing the app to an unsecure location, the static_folder MUST only contain web resources!!!
 app = Flask(__name__, static_folder=static_folder, static_url_path='/')
 app.config['db'] = db
-app.register_blueprint(routes.app, url_prefix='/appchen/client')
+app.register_blueprint(routes.app, url_prefix='/appchen/web_client')
 
 trade_execution_schema = {'type': 'object', 'properties': {
     'delivery': {'columnIndex': 0, 'type': 'string', 'width': 200},
