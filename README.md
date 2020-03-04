@@ -9,17 +9,37 @@ This is a client/server web framework based an Python and modern JavaScript.
 * Uses es6 modules and plain vanilla JavaScript
 
 # Setup
+ 
+## Option A: Clone app-chen
 
 ````shell script
- /c/ws/tools/python3/python -m venv venv
+git clone https://github.com/decatur/app-chen.git
+cd app-chen/
+python -m venv ./venv
+source venv/Scripts/activate
+pip install -r requirements.txt
+
+
  ````
 
-
-# Running the demo
+## Option B: Install into Existing Project
 
 ````shell script
 pip install Flask pymongo git+https://github.com/decatur/app-chen.git
+ ````
+
+# Run Demo Web Server
+
+````shell script
 /c/tools/mongodb/bin/mongod --port 27017 --dbpath /c/data/db
-python -m appchen.demo
+python -m appchen.web_demo.run_server --mongoport=27017 --httpport=8080
+ ````
+
+You may now navigate to http://localhost:8080 with Chrome or Firefox.
+
+
+# Run Demo Python Client
+
+````shell script
+python -m appchen.python_client.client_demo --httpport=8080
 ````
-Then navigate to http://localhost:8080/ with modern Chrome or Firefox.

@@ -4,7 +4,7 @@ const innerHTML = `
 <section style="height: 15ex;">
     section 1 with fixed height
     <ul>
-        <li><a href="editor.html" target="Edit">Edit</a></li>
+        <li><a href="../client/editor.html" target="Edit">Edit</a></li>
         <li><a href="topics" target="topics">topics</a></li>
     </ul>
 </section>

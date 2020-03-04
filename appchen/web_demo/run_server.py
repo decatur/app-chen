@@ -1,4 +1,5 @@
 import logging
+import argparse
 import threading
 import werkzeug
 import time
@@ -15,9 +16,21 @@ import appchen.routes as routes
 
 logging.getLogger().setLevel(logging.INFO)
 
-db = pymongo.MongoClient('localhost:27017', tz_aware=True, serverSelectionTimeoutMS=1000).get_database('appchen')
+parser = argparse.ArgumentParser()
+parser.add_argument("--mongoport", required=True, type=int)
+parser.add_argument("--httpport", required=True, type=int)
+args = parser.parse_args()
 
-static_folder = pathlib.Path('./client').resolve()
+db = pymongo.MongoClient(f'localhost:{args.mongoport}', tz_aware=True, serverSelectionTimeoutMS=1000).get_database('appchen')
+try:
+    # Fail fast if there is no running MongoDB.
+    db.client.admin.command('ismaster')
+except pymongo.errors.ConnectionFailure as e:
+    print("Server not available")
+    raise e
+
+
+static_folder = pathlib.Path('.').resolve()
 # WARNING: When exposing the app to an unsecure location, the static_folder MUST only contain web resources!!!
 app = Flask(__name__, static_folder=static_folder, static_url_path='/')
 app.config['db'] = db
@@ -34,7 +47,7 @@ trade_execution_schema = {'type': 'object', 'properties': {
 
 @app.route("/", methods=['GET'])
 def get_home():
-    return redirect('/appchen/client/myapp.html')
+    return redirect('/myapp.html')
 
 
 def trade_executions_state():
@@ -113,11 +126,11 @@ def pump_trade_executions():
     threading.Thread(target=target).start()
 
 
-# db.get_collection('transactions').drop()
+# db.get_collection('trade_executions').drop()
 
 pump_zen()
 pump_trade_executions()
 
 routes.resources['trade_executions_state'] = trade_executions_state
 
-werkzeug.serving.run_simple('localhost', 8080, app, threaded=True)
+werkzeug.serving.run_simple('localhost', args.httpport, app, threaded=True)

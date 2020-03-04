@@ -2,7 +2,7 @@
 
 import "/appchen/client/grid-chen/webcomponent.js";
 import {createView} from "/appchen/client/grid-chen/matrixview.js"
-import * as io from "./io.js";
+import * as io from "/appchen/client/io.js";
 
 const innerHTML = `
 <label>Subscription Active <input class="subscribed" type="checkbox" checked></label>

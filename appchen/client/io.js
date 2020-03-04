@@ -1,6 +1,6 @@
 /**
  * Author: Wolfgang Kühn 2020
- * Source located at https://github.com/decatur/app-chen/client
+ * Source located at https://github.com/decatur/app-chen
  *
  * Module implementing support for real time streaming via Server Send Events.
  *
