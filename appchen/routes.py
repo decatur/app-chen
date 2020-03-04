@@ -136,7 +136,9 @@ def post_subscribe():
     connection = sse.get_connection_by_id(connection_id)
     for topic in topics:
         if topic.endswith('_state') and topic in resources:
-            connection.emit(topic, resources[topic]())
+            evt = resources[topic]()
+            if evt:
+                connection.emit(topic, evt)
 
     sse.subscribe(connection, topics)
     return jsonify('Done')
