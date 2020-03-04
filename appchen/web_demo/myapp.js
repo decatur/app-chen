@@ -2,9 +2,9 @@ import {initializeApp} from "/appchen/client/app.js"
 import * as io from "/appchen/client/io.js";
 
 const app = initializeApp([
-    {title: 'The Weblet 1', src: '/weblet1.js'},
     {title: 'Live Trades', src: '/live-trades.js'},
-    {title: 'The Weblet 3', src: '/weblets/weblet3.js'},
+    {title: 'The Weblet 1', src: '/weblet1.js'},
+    {title: 'The Weblet 3', src: '/appchen/client/weblets/weblet3.js'},
     {title: 'Message Discovery', src: '/appchen/client/message-discovery.js'}]);
 
 app.props['start'] = '2020-01-01';

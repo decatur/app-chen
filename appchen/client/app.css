@@ -1,0 +1,72 @@
+html {
+    height: 100%;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    height: 100%;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    margin: 0px;
+}
+
+section {
+    margin: 1ex;
+    background-color: aqua;
+}
+
+header {
+    background-color: #d0d0d0;
+    width: 100%;
+    padding: 0;
+}
+
+.nav {
+    display: inline-block;
+    padding: 1ex;
+    border: 1px solid black;
+    margin: 0;
+    width: 20ex;
+    text-align: center;
+}
+
+.activeNav {
+    display: inline-block;
+    padding: 1ex;
+    border: 1px solid black;
+    margin: 0;
+    width: 20ex;
+    text-align: center;
+    font-weight: bolder;
+}
+
+.weblet {
+    display: none;
+    width: 99%;
+    margin: 1ex;
+    flex-direction: column;
+    flex: 1;
+}
+
+#menu {
+    margin: 0;
+    top: 1ex;
+    left: 1ex;
+}
+
+.menu-opens {
+    animation-name: scaleIn;
+    animation-duration: 0.5s;
+}
+
+@keyframes scaleIn {
+    0% {
+        transform: scale(0.2)
+    }
+    100% {
+        transform: scale(1)
+    }
+}
+
+
