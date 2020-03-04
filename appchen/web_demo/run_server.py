@@ -26,11 +26,11 @@ try:
     # Fail fast if there is no running MongoDB.
     db.client.admin.command('ismaster')
 except pymongo.errors.ConnectionFailure as e:
-    print("Server not available")
+    logging.error("MongoDB not available")
     raise e
 
 
-static_folder = pathlib.Path('.').resolve()
+static_folder = pathlib.Path(__file__).parent.resolve()
 # WARNING: When exposing the app to an unsecure location, the static_folder MUST only contain web resources!!!
 app = Flask(__name__, static_folder=static_folder, static_url_path='/')
 app.config['db'] = db
@@ -41,7 +41,7 @@ trade_execution_schema = {'type': 'object', 'properties': {
     'executionTime': {'columnIndex': 3, 'type': 'string', 'format': 'date-time', 'period': 'SECONDS', 'width': 200},
     'quantity': {'columnIndex': 1, 'title': 'Quantity[MW]', 'type': 'number'},
     'price': {'columnIndex': 2, 'title': 'Price[€/MWh]', 'type': 'number'},
-    '_id': {'columnIndex': 4, 'type': 'string', 'width': 250}
+    'id': {'columnIndex': 4, 'type': 'string', 'width': 250}
 }}
 
 
@@ -58,16 +58,17 @@ def trade_executions_state():
     trades = []
 
     for trade in cursor:
-        trade['_id'] = str(trade['_id'])
+        trade['id'] = str(trade['_id'])
+        del trade['_id']
         trades.append(trade)
 
-    schema = {
+    rows_of_object_schema = {
         "title": 'Modules',
         "type": 'array',
         "items": trade_execution_schema
     }
 
-    return dict(schema=schema, data=trades)
+    return dict(schema=rows_of_object_schema, data=trades)
 
 
 @app.route("/trade_executions", methods=['GET'])
@@ -83,7 +84,6 @@ def pump_zen():
             time.sleep(5.0)
             sse.broadcast('zen', dict(index=next(index), lesson=next(zen_cycle)))
 
-    # schema = {'properties': {'lesson': {'type': 'string'}}}
     sse.declare_topic('zen', 'A new zen of python every 5 seconds',
                       {
                           "index": 0,
@@ -107,17 +107,12 @@ def pump_trade_executions():
             routes.time_line_index += 1
             price += randint(-10, 10) / 10
             db.get_collection('trade_executions').insert_one(trade)
-            trade['_id'] = str(trade['_id'])
+            trade['id'] = str(trade['_id'])
+            del trade['_id']
             sse.broadcast('trade_execution', trade)
 
-    # schema = {'properties': {
-    #     'product': {'type': 'string'},
-    #     'executionTime': {'type': 'string', 'format': 'date-time'},
-    #     'quantity': {'type': 'number', 'unit': 'MW'},
-    #     'price': {'type': 'number', 'unit': '€/MWh'}
-    # }}
     sse.declare_topic('trade_execution', 'A trade occurred. Price is in [€/MWh], quantity is in [MW]', {
-        "_id": "5e2af2115e6d266444f1c69e",
+        "id": "5e2af2115e6d266444f1c69e",
         "delivery": "2020-02-01T06:45PT15M",
         "executionTime": "2020-01-24T13:33:05.246293+00:00",
         "price": 51.7,
