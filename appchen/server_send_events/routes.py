@@ -3,7 +3,7 @@
 
 import logging
 import pathlib
-from typing import List
+from typing import List, Callable, Dict
 import datetime
 
 from flask import Response, request, jsonify, Blueprint
@@ -15,7 +15,7 @@ import appchen.server_send_events.server as sse
 db: pymongo.mongo_client.database.Database or None = None
 app = Blueprint('appchen', __name__, static_folder='../web_client', static_url_path='')
 
-resources = dict()
+_state_events_by_topic: Dict[str, Callable[[], dict]] = dict()
 
 
 def on_register(state):
@@ -24,6 +24,17 @@ def on_register(state):
 
 
 app.record(on_register)
+
+
+def route(topic: str):
+    """A decorator used to register a state event.
+    """
+
+    def decorator(f):
+        _state_events_by_topic[topic] = f
+        return f
+
+    return decorator
 
 
 def import_weblets(src_dir: pathlib.Path):
@@ -54,7 +65,8 @@ def db_error_handler(error):
     return f'Database connection failed: {str(error)}', 500
 
 
-def weblets():
+@route('weblets_state')
+def weblets_state():
     schema = {
         "title": 'Weblets',
         "type": 'array',
@@ -83,9 +95,10 @@ def weblets():
 
     return dict(schema=schema, weblets=weblets)
 
+
 @app.route("/weblets", methods=['GET'])
 def get_weblets():
-    return jsonify(weblets())
+    return jsonify(weblets_state())
 
 
 @app.route("/weblets/<name>.js", methods=['GET'])
@@ -134,8 +147,8 @@ def post_subscribe():
     topics: List[str] = request_data['topics']
     connection = sse.get_connection_by_id(connection_id)
     for topic in topics:
-        if topic.endswith('_state') and topic in resources:
-            evt = resources[topic]()
+        if topic.endswith('_state') and topic in _state_events_by_topic:
+            evt = _state_events_by_topic[topic]()
             if evt:
                 connection.emit(topic, evt)
 
@@ -154,6 +167,3 @@ def open_connection():
 @app.route('/topics', methods=['GET'])
 def get_topics():
     return jsonify(list(sse.declared_topics.values()))
-
-
-resources['weblets_state'] = weblets

@@ -122,5 +122,6 @@ declare_topic('keep_alive_or_let_die',
               """Event send each 10 seconds on each connection without explicitly subscribing to it.
 Needed to (1) prevent HTTP proxy timeouts and (2) needed to detect closed connections via GeneratorExit.""",
               {
-                  "threadCount": 7
+                  "threadCount": 7,
+                  "datetime": "2020-02-29T13:00:00Z"
               })

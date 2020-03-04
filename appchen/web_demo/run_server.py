@@ -50,6 +50,7 @@ def get_home():
     return redirect('/myapp.html')
 
 
+@routes.route('trade_executions_state')
 def trade_executions_state():
     # Simulate network delay
     time.sleep(1.0)
@@ -124,7 +125,5 @@ def pump_trade_executions():
 
 pump_zen()
 pump_trade_executions()
-
-routes.resources['trade_executions_state'] = trade_executions_state
 
 werkzeug.serving.run_simple('localhost', args.httpport, app, threaded=True)
