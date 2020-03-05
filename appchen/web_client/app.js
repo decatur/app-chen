@@ -123,7 +123,7 @@ export function initializeApp(webletInfos) {
         }
 
         for (const weblet of Object.values(webletsById).filter(weblet => weblet.module)) {
-            weblet.module.render();
+            weblet.module.render(weblet);
         }
     }
 
