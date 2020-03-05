@@ -5,7 +5,7 @@ from setuptools.command.develop import develop
 
 setup(
     name='app-chen',
-    version='v0.0.5',
+    version='v0.0.6',
     packages=['appchen'],
     include_package_data=True,  # This also needs a MANIFEST.in, and yes, python packaging sucks.
     license='MIT',
