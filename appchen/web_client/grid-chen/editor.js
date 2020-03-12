@@ -158,7 +158,7 @@ export function createEditor(container, commitCellEdit, selection, lineHeight) {
             evt.stopPropagation();
             commit();
             selection.move(1, 0);
-        } else if (evt.code === 'Enter' && evt.altKey) {
+        } else if (['Enter', 'NumpadEnter'].includes(evt.code) && evt.altKey) {
             evt.preventDefault();
             evt.stopPropagation();
             if (input.style.display !== 'none') {
@@ -167,7 +167,7 @@ export function createEditor(container, commitCellEdit, selection, lineHeight) {
             } else {
                 textarea.setRangeText('\n', textarea.selectionStart, textarea.selectionEnd, 'end');
             }
-        } else if (evt.code === 'Enter') {
+        } else if (['Enter', 'NumpadEnter'].includes(evt.code)) {
             evt.preventDefault();
             evt.stopPropagation();
             commit();
@@ -204,10 +204,18 @@ export function createEditor(container, commitCellEdit, selection, lineHeight) {
         constructor() {
         }
 
+        /** @returns {GridChenNS.CellEditMode} */
         get mode() {
             return currentMode
         }
 
+        /**
+         * @param {GridChenNS.CellEditMode} mode
+         * @param value
+         * @param {CSSStyleDeclaration} spanStyle
+         * @param {object} schema
+         * @param {boolean} readOnly
+         */
         open(mode, value, spanStyle, schema, readOnly) {
             currentMode = mode;
             currentSchema = schema;

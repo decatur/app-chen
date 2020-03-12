@@ -231,13 +231,12 @@ export function createSelection(uiRefresher, grid) {
         }
 
         /**
-         *
          * @param evt
          * @param cellParent
          * @param {IndexToPixelMapper} indexMapper
          */
         startSelection(evt, cellParent, indexMapper) {
-            startSelection(evt, this, cellParent, indexMapper);
+            _startSelection(evt, this, cellParent, indexMapper);
         }
 
         move(rowIncrement, columnIncrement, doExpand) {
@@ -287,7 +286,6 @@ export function createSelection(uiRefresher, grid) {
             selection.show();
         }
 
-
         /**
          * @param {KeyboardEvent} evt
          */
@@ -320,7 +318,7 @@ export function createSelection(uiRefresher, grid) {
                     columnIncrement = 1;
                 }
                 move(0, columnIncrement, doExpand);
-            } else if (evt.code === 'ArrowUp' || (evt.code === "Enter" && evt.shiftKey)) {
+            } else if (evt.code === 'ArrowUp' || (['Enter', 'NumpadEnter'].includes(evt.code) && evt.shiftKey)) {
                 const doExpand = (evt.code === 'ArrowUp' && evt.shiftKey);
                 let rowIncrement;
                 if ((evt.code === 'ArrowUp' && evt.ctrlKey)) {
@@ -329,7 +327,7 @@ export function createSelection(uiRefresher, grid) {
                     rowIncrement = -1;
                 }
                 move(rowIncrement, 0, doExpand);
-            } else if (evt.code === 'ArrowDown' || evt.code === 'Enter') {
+            } else if (evt.code === 'ArrowDown' || ['Enter', 'NumpadEnter'].includes(evt.code)) {
                 const doExpand = (evt.code === 'ArrowDown' && evt.shiftKey);
                 let rowIncrement;
                 if ((evt.code === 'ArrowDown' && evt.ctrlKey)) {
@@ -402,7 +400,7 @@ function intersectInterval(i1, i2) {
  * @param {HTMLDivElement} cellParent
  * @param {IndexToPixelMapper} indexMapper
  */
-function startSelection(evt, selection, cellParent, indexMapper) {
+function _startSelection(evt, selection, cellParent, indexMapper) {
     let {rowIndex, columnIndex} = indexMapper.pixelCoordsToCellIndex(evt.clientX, evt.clientY);
 
     let current = new Range(rowIndex, columnIndex, 1, 1);
