@@ -1,14 +1,14 @@
 """A very small EventSource implementation based on the sseclient package."""
+import time
 import codecs
 import logging
 import re
 import threading
-from typing import List, Dict, Callable
+from typing import Callable
 import http.client
 
 from sseclient import SSEClient, Event, end_of_field
-import time
-
+from appchen import eventing
 import requests
 
 
@@ -60,13 +60,15 @@ class SSEClient1(SSEClient):
         return msg
 
 
-EVENT_LISTENER = Callable[[Event], None]
+class _ImmediateEventLoop(eventing.EventLoop):
+    def call_soon(self, callback: Callable[..., None], *args):
+        callback(*args)
 
 
-class EventSource:
+class EventSource(eventing.EventSource):
     def __init__(self, url: str):
+        super().__init__(_ImmediateEventLoop())
         self.url = url
-        self._event_listeners_by_type: Dict[str, List[EVENT_LISTENER]] = dict()
 
         def sse_connect():
             while True:
@@ -85,27 +87,12 @@ class EventSource:
         threading.Thread(target=sse_connect).start()
 
     def _process_event(self, event: Event):
-        logging.info('EventSource._process_event: ' + event.event)
-        if event.event == 'message':  # TODO: Spec says to call onmessage handler if event has no event field.
+        event.type = event.event
+        logging.info('EventSource._process_event: ' + event.type)
+        if event.type == 'message':  # TODO: Spec says to call onmessage handler if event has no event field.
             self.onmessage(event)
-        elif event.event in self._event_listeners_by_type:
-            for callback in self._event_listeners_by_type[event.event]:
-                callback(event)
+        else:
+            self.dispatch_event(event)
 
     def onmessage(self, event: Event):
         pass
-
-    def add_event_listener(self, topic: str, callback: EVENT_LISTENER):
-        """Adds an event listener for a given topic.
-        """
-        if type not in self._event_listeners_by_type:
-            self._event_listeners_by_type[topic] = []
-        self._event_listeners_by_type[topic].append(callback)
-
-    def route(self, topic: str):
-        """A decorator that is used to add an event listener for a given topic.
-        """
-        def decorator(f):
-            self.add_event_listener(topic, f)
-            return f
-        return decorator
