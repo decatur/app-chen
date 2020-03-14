@@ -3,6 +3,7 @@
 
 import logging
 import pathlib
+from functools import partial
 from typing import List, Callable, Dict
 import datetime
 
@@ -26,12 +27,14 @@ def on_register(state):
 app.record(on_register)
 
 
-def route(topic: str):
+def route(topic: str, **kwargs):
     """A decorator used to register a state event.
     """
 
     def decorator(f):
-        _state_events_by_topic[topic] = f
+        if topic in _state_events_by_topic:
+            raise KeyError('Topic is already routed: ' + topic)
+        _state_events_by_topic[topic] = partial(f, **kwargs)
         return f
 
     return decorator
