@@ -14,14 +14,14 @@ const html = `<form style="margin-top:1ex">
     <fieldset>
         <label>Start Transaction Time <input name="start" value="" size="30"></label>
         <label>End Transaction Time <input name="end" value="" size="30"></label>
-        <button name="toggleLock" title="Toggle Time Lock" type="button" style="font-size: large">🔒</button>
-        <button name="load" title="Apply Transaction Interval" type="button" style="font-size: large">🔍</button>
+        <button name="toggleLock" title="Toggle Time Lock" type="button" style="font-size: large; background-color: #222">🔒</button>
+        <button name="query" title="Apply Transaction Interval" type="submit" style="font-size: large">🔍</button>
         <span class="status"></span>
     </fieldset>
 </form>`;
 
 class TimeInterval extends HTMLElement {
-    /** @param{HTMLElement} container */
+
     constructor() {
         super();
         this.attachShadow({mode: 'open'});
@@ -32,14 +32,15 @@ class TimeInterval extends HTMLElement {
         /** @type{HTMLButtonElement} */
         const toggleLock = form.toggleLock;
         const status = form.querySelector('.status');
-        form.onsubmit = (event) => event.preventDefault();
-        form.load.onclick = () => {
+        form.onsubmit = (event) => {
+            event.preventDefault();
             disableButtons(form);
-            busy(form.load);
+            busy(form.query);
             status.textContent = 'Loading ...';
-            this.onload(this.start(), this.end())
+            this.onsubmit(this.start(), this.end())
+
                 .then((statusText) => {
-                    status.textContent = statusText;
+                    status.textContent = /**@type{string}*/ statusText;
                     enableButtons(form)
                 });
         };
@@ -68,14 +69,27 @@ class TimeInterval extends HTMLElement {
         });
     }
 
-    onload(start, end) {
-        void [start, end]
+    /**
+     * Overwrite this method to react to the form submit event, .i.e. query button pressed.
+     * @param {string} start
+     * @param {string} end
+     * @returns {Promise}
+     */
+    onsubmit(start, end) {
+        void [start, end];
+        return Promise.resolve()
     }
 
+    /**
+     * @returns {string}
+     */
     start() {
         return this.form['start'].value.trim()
     }
 
+    /**
+     * @returns {string}
+     */
     end() {
         return this.form['end'].value.trim()
     }
