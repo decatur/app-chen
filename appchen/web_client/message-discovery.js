@@ -23,6 +23,12 @@ const innerHTML = `
 
 /**
  * @param {AppChenNS.Weblet} weblet
+ */
+export function render(weblet) {
+}
+
+/**
+ * @param {AppChenNS.Weblet} weblet
  * @param {HTMLElement} container
  * @returns {Promise<*>}
  */
