@@ -78,10 +78,10 @@ export function initializeApp(webletInfos) {
             webletElement.className = 'weblet';
             document.body.appendChild(webletElement);
 
-            const navElement = document.createElement('button');
-            navElement.value = id;
+            const navElement = document.createElement('a');
             navElement.className = 'nav';
             navElement.textContent = webletElement.title;
+            navElement.href = '#' + id;
             dialogElement.firstElementChild.appendChild(navElement);
             webletsById[id] = {
                 id, element: webletElement, navElement,
@@ -93,26 +93,13 @@ export function initializeApp(webletInfos) {
             };
         }
 
-        dialogElement.onclose = function () {
-            dialogElement.classList.remove('menu-opens');
-            if (dialogElement.returnValue && dialogElement.returnValue !== app.activeWebletId) {
-                app.activateWebletFromHash(dialogElement.returnValue);
-            }
-        };
-
         document.getElementById('activeWeblet').onclick = () => {
             dialogElement.classList.add('menu-opens');
             dialogElement.showModal();
         };
 
         dialogElement.addEventListener('click', (evt) => {
-            if (evt.target.tagName === 'BUTTON') {
-                // This is quirky: We use method="dialog" on the dialog form to get at the clicked button
-                // (dialogElement.onclose()) AND to close the dialog auto-magically.
-                // To this click we must not to react here.
-                return
-            }
-            console.log(evt);
+            dialogElement.classList.remove('menu-opens');
             dialogElement.close();
         });
     }
@@ -129,8 +116,13 @@ export function initializeApp(webletInfos) {
 
     document.addEventListener('visibilitychange', rerender);
     createWebLets();
+    window.onhashchange = function(evt) {
+        app.activateWebletFromHash();
+    };
     return app
 }
+
+
 
 window.onerror = function (error, url, line) {
     // console.log(Array.prototype.slice.call(arguments).join(' '));
