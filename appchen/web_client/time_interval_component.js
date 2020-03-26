@@ -31,6 +31,12 @@ class TimeInterval extends HTMLElement {
         this.form = form;
         /** @type{HTMLButtonElement} */
         const toggleLock = form.toggleLock;
+        /** @type{HTMLInputElement} */
+        const start = form['start'];
+        /** @type{HTMLInputElement} */
+        const end = form['end'];
+        start.disabled = end.disabled = true;
+
         const status = form.querySelector('.status');
         form.onsubmit = (event) => {
             event.preventDefault();
@@ -46,18 +52,16 @@ class TimeInterval extends HTMLElement {
         };
 
         toggleLock.onclick = () => {
-            if (toggleLock.textContent === '🔒') {
-                toggleLock.textContent = '🔓'
-            } else {
-                toggleLock.textContent = '🔒'
-            }
+            const isLocked = toggleLock.textContent === '🔓';
+            start.disabled = end.disabled = isLocked;
+            toggleLock.textContent = isLocked?'🔒':'🔓';
         };
 
         function processTime(response) {
             const startTransactionTime = new Date(response['startTransactionTime']);
             const endTransactionTime = new Date(response['endTransactionTime']);
-            form.start.value = toLocaleISODateTimeString(startTransactionTime, resolvePeriod('SECONDS'));
-            form.end.value = toLocaleISODateTimeString(endTransactionTime, resolvePeriod('SECONDS'));
+            start.value = toLocaleISODateTimeString(startTransactionTime, resolvePeriod('SECONDS'));
+            end.value = toLocaleISODateTimeString(endTransactionTime, resolvePeriod('SECONDS'));
         }
 
         io.stream().subscribe({

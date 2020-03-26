@@ -58,7 +58,7 @@ ev.registerSubscription = function (topics) {
     for (const topic of Object.keys(topics)) {
         function processEvent(event) {
             // Note: event.type == topic
-            console.log(`processEvent ${event.type}`);
+            // console.debug(`processEvent ${event.type}`);
             try {
                 const json = JSON.parse(event.data);
                 topics[topic](json);
