@@ -30,4 +30,4 @@ stream.setOpenListener((event) => {
     statusElement.textContent = io.readyStateLabels[eventSource.readyState] + ' ' + eventSource.url;
 });
 
-app.activateWebletFromHash();
+app.activate();

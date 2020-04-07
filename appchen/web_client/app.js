@@ -28,16 +28,11 @@ export function initializeApp(webletInfos) {
     const webletsById = /**@type{AppChenNS.WebletCollection}*/ {};
 
     /**
-     * @param {string?} id
      * @returns {Promise}
      */
-    app.activateWebletFromHash = function (id) {
-        id = id || location.hash.substr(1);
-        if (!(id in webletsById)) {
-            id = Object.keys(webletsById)[0];
-        }
+    function activateWebletFromHash() {
+        const id = location.hash.substr(1);
         document.getElementById('activeWeblet').textContent = '🗐 ' + webletsById[id].element.title;
-
         console.log('Activate Weblet ' + id);
 
         for (let weblet of Object.values(webletsById)) {
@@ -49,7 +44,6 @@ export function initializeApp(webletInfos) {
         const weblet = webletsById[id];
         weblet.element.style.display = weblet.display;
         weblet.navElement.className = 'activeNav';
-        window.location.hash = '#' + id;
         app.activeWebletId = id;
 
         if (weblet.module) {
@@ -65,6 +59,30 @@ export function initializeApp(webletInfos) {
                     weblet.element.textContent = String(err);
                 });
         }
+    };
+
+    /**
+     *
+     * @param{string} defaultWeblet
+     */
+    app.activate = function(defaultWeblet) {
+        let hash = window.location.hash || defaultWeblet;
+        if (!(hash.substr(1) in webletsById)) {
+             hash = '#' + Object.keys(webletsById)[0];
+        }
+        // There must be a better way to call activateWebletFromHash exactly once.
+        window.location.hash = hash;
+        activateWebletFromHash();
+        window.setTimeout(() => {
+            // Attach onhashchange after the microtask otherwise activateWebletFromHash is called the second time.
+            window.onhashchange = function (evt) {
+                if (!(window.location.hash.substr(1) in webletsById)) {
+                    window.location.hash = '#' + Object.keys(webletsById)[0];
+                } else {
+                    activateWebletFromHash();
+                }
+            }
+        }, 10);
     };
 
     function createWebLets() {
@@ -116,9 +134,6 @@ export function initializeApp(webletInfos) {
 
     document.addEventListener('visibilitychange', rerender);
     createWebLets();
-    window.onhashchange = function(evt) {
-        app.activateWebletFromHash();
-    };
     return app
 }
 
