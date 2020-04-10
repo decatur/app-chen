@@ -16,8 +16,9 @@ import json
 import logging
 import secrets
 import datetime
+import types
 from queue import Queue
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Callable, Union
 
 _connections = collections.deque()
 _connections_by_event_type = collections.defaultdict(set)
@@ -84,11 +85,16 @@ def get_connection_by_id(guid: str) -> Optional[Connection]:
     return None
 
 
-def broadcast(topic: str, event: dict):
+def broadcast(topic: str, event: Union[Callable[[], Dict], Dict]):
     """
     Broadcasts the event to all registered Connections.
     The event must be serializable by json.dumps()
     """
+    if topic not in _connections_by_event_type:
+        return
+
+    if isinstance(event, types.FunctionType):
+        event = event()
     data = json.dumps(event)
     logging.info(f'broadcast {topic} {data}')
     if topic not in declared_topics:
