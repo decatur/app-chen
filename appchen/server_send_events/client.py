@@ -85,6 +85,8 @@ class EventSource(eventing.EventSource):
         self.url = url
         self.readyState = _CONNECTING
 
+    def connect(self):
+        """Non-Web/API/EventSource method to defer connection AFTER event listeners have been added."""
         def sse_connect():
             while True:
                 try:
