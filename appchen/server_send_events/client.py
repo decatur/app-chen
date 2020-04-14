@@ -65,34 +65,70 @@ class _ImmediateEventLoop(eventing.EventLoop):
         callback(*args)
 
 
+class MessageEvent:
+    data: str
+    type: str
+
+
+# A number representing the state of the connection. Possible values are
+_CONNECTING = 0
+_OPEN = 1
+_CLOSED = 2
+
+
 class EventSource(eventing.EventSource):
+    """
+    Partially implements https://developer.mozilla.org/en-US/docs/Web/API/EventSource
+    """
     def __init__(self, url: str):
         super().__init__(_ImmediateEventLoop())
         self.url = url
+        self.readyState = _CONNECTING
 
         def sse_connect():
             while True:
-                messages = SSEClient1(self.url)
+                try:
+                    messages = SSEClient1(self.url)
+                except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as e:
+                    self._process_event(Event(data=str(e), event='error'))
+                    return
+
+                self.readyState = _OPEN
                 try:
                     for event in messages:
+                        if self.readyState == _CLOSED:  # TODO: We should close the underlying HTTP request.
+                            logging.info('EventSource closing...')
+                            return
+
                         self._process_event(event)
                 except (ConnectionResetError, requests.exceptions.ConnectionError) as e:
                     # TODO: We do not need to handle ConnectionError, SSEClient does it for us.
                     logging.exception(str(e))
                     pass
 
-                logging.info('EventSource reconnect...')
+                logging.debug('EventSource reconnect...')
+                self.readyState = _CONNECTING
                 time.sleep(1)
 
         threading.Thread(target=sse_connect).start()
 
     def _process_event(self, event: Event):
-        event.type = event.event
-        logging.info('EventSource._process_event: ' + event.type)
-        if event.type == 'message':  # TODO: Spec says to call onmessage handler if event has no event field.
-            self.onmessage(event)
-        else:
-            self.dispatch_event(event)
+        if event.event == 'connection_open':
+            event.event = 'open'
+        elif not event.event:
+            event.event = 'message'
+        event.type = event.event  # https://developer.mozilla.org/en-US/docs/Web/API/Event/type
+        logging.debug('EventSource._process_event: ' + event.type)
+        self.dispatch_event(event)
+
+    def close(self):
+        self.readyState = _CLOSED
+
+    def onopen(self, event: Event):
+        raise NotImplementedError('Use add_event_listener("open", ...)')
 
     def onmessage(self, event: Event):
-        pass
+        raise NotImplementedError('Use add_event_listener("message", ...)')
+
+    def onerror(self, event: Event):
+        raise NotImplementedError('Use add_event_listener("error", ...)')

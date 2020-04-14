@@ -44,7 +44,7 @@ export function init(weblet, container) {
         elem.appendChild(topicElement);
     }
 
-    io.fetchJSON('/appchen/web_client/topics')
+    io.fetchJSON('/appchen/web_client/stream/topics')
         .then(topics => {
             const elem = document.querySelector('.topics');
             elem.innerHTML = '';

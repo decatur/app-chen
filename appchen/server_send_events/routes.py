@@ -48,6 +48,6 @@ def open_connection():
     return Response(connection.event_generator(), mimetype="text/event-stream")
 
 
-@app.route('/topics', methods=['GET'])
+@app.route('/stream/topics', methods=['GET'])
 def get_topics():
     return jsonify(list(server.declared_topics.values()))
