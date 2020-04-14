@@ -1,4 +1,4 @@
-import dataclasses
+
 import abc
 from typing import Dict, List, Callable
 
@@ -11,7 +11,6 @@ class EventLoop(abc.ABC):
         pass
 
 
-@dataclasses.dataclass
 class Event:
     type: str
 

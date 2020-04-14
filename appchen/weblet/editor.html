@@ -31,13 +31,15 @@
 
     import "/appchen/web_client/grid-chen/webcomponent.js";
     import {createView} from "/appchen/web_client/grid-chen/matrixview.js"
-    import * as io from "./io.js";
+    import * as io from "/appchen/web_client/io.js";
 
     let editor = void 0;
     const styleSheet = document.createElement('style');
-    styleSheet.textContent = '@import url("codemirror/lib/codemirror.css") screen; .CodeMirror {height: 100%;}';
+    styleSheet.textContent = '@import url("/appchen/web_client/codemirror/lib/codemirror.css") screen; .CodeMirror {height: 100%;}';
     document.body.appendChild(styleSheet);
-    io.loadLegacyScript(["codemirror/lib/codemirror.js", "codemirror/addon/edit/matchbrackets.js", "codemirror/mode/javascript/javascript.js"])
+    let modules = ["lib/codemirror.js", "addon/edit/matchbrackets.js", "mode/javascript/javascript.js"];
+    modules = modules.map(module => '/appchen/web_client/codemirror/' + module);
+    io.loadLegacyScript(modules)
         .then(() => {
             editor = window['CodeMirror'](document.getElementById('code'), {
                 lineNumbers: true,
@@ -61,7 +63,7 @@
             alert('Save as what? 🤡');
             return;
         }
-        fetch('/appchen/web_client/weblets/' + key, {
+        fetch('/appchen/weblet/' + key, {
             method: 'POST',
             headers: {'Content-Type': 'application/json; charset=utf-8'},
             body: JSON.stringify({code: editor.getValue()})
@@ -78,7 +80,7 @@
      */
     window.onhashchange = function (evt) {
         void evt;
-        io.fetchJSON('/appchen/web_client/weblets/' + window.location.hash.substr(1))
+        io.fetchJSON('/appchen/weblet/' + window.location.hash.substr(1))
             .then(weblet => {
                 saveForm.key.value = weblet.name;
                 editor.setValue(weblet.code);

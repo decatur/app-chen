@@ -22,7 +22,7 @@ def on_connection_open(event: Event):
     # logging.info(data['connectionId'])
     r = requests.post(base_url + 'subscribe', data=json.dumps({
         'connectionId': data['connectionId'],
-        'topics': ['zen', 'trade_executions_state', 'trade_execution']
+        'topics': ['zen', 'trade_executions_state', 'trade_executions']
     }))
     assert r.ok
 
@@ -33,8 +33,8 @@ def on_zen(event: Event):
     logging.debug(data)
 
 
-@es.route('trade_execution')
-def on_trade_execution(event: Event):
+@es.route('trade_executions')
+def on_trade_executions(event: Event):
     data: dict = json.loads(event.data)
     logging.debug(data)
 

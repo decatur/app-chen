@@ -4,7 +4,7 @@ import * as io from "/appchen/web_client/io.js";
 const app = initializeApp([
     {title: 'Live Trades', src: '/live-trades.js'},
     {title: 'The Weblet 1', src: '/weblet1.js'},
-    {title: 'The Weblet 3', src: '/appchen/web_client/weblets/weblet3.js'},
+    {title: 'The Weblet 3', src: '/appchen/weblet/weblet3.js'},
     {title: 'Message Discovery', src: '/appchen/web_client/message-discovery.js'}]);
 
 app.props['start'] = '2020-01-01';

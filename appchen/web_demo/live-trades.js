@@ -89,8 +89,8 @@ export function init(weblet, container) {
             model.addTrades(state.data);
             render(weblet);
         },
-        'trade_execution': (event) => {
-            model.addTrades([event]);
+        'trade_executions': (event) => {
+            model.addTrades(event.trades);
             render(weblet);
         }
     });

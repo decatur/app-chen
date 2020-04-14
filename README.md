@@ -18,14 +18,12 @@ cd app-chen/
 python -m venv ./venv
 source venv/Scripts/activate
 pip install -r requirements.txt
-
-
  ````
 
 ## Option B: Install into Existing Project
 
 ````shell script
-pip install Flask pymongo git+https://github.com/decatur/app-chen.git
+pip install git+https://github.com/decatur/app-chen.git
  ````
 
 # Run Demo Web Server
@@ -41,5 +39,5 @@ You may now navigate to http://localhost:8080 with Chrome or Firefox.
 # Run Demo Python Client
 
 ````shell script
-python -m appchen.server_send_events.client_demo --httpport=8080
+python -m appchen.web_demo.client --httpport=8080
 ````

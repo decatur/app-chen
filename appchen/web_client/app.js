@@ -62,11 +62,9 @@ export function initializeApp(webletInfos) {
     };
 
     /**
-     *
-     * @param{string} defaultWeblet
      */
-    app.activate = function(defaultWeblet) {
-        let hash = window.location.hash || defaultWeblet;
+    app.activate = function() {
+        let hash = window.location.hash;
         if (!(hash.substr(1) in webletsById)) {
              hash = '#' + Object.keys(webletsById)[0];
         }

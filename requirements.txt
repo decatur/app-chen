@@ -1,4 +1,4 @@
 Flask
 pymongo
-# sseclient
-# requests
+sseclient
+requests
