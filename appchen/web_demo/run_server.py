@@ -76,6 +76,11 @@ def trade_executions_state():
     return dict(schema=rows_of_object_schema, data=trades)
 
 
+@routes.route('time_state')
+def time_state():
+    return dict(transactionTime=datetime.datetime.utcnow().isoformat() + 'Z')
+
+
 @app.route("/trade_executions", methods=['GET'])
 def get_trade_executions():
     return jsonify(trade_executions_state())
@@ -88,6 +93,7 @@ def pump_zen():
         while True:
             time.sleep(5.0)
             server.broadcast('zen', dict(index=next(index), lesson=next(zen_cycle)))
+            server.broadcast('time_changed', time_state())
 
     server.declare_topic('zen', 'A new zen of python every 5 seconds',
                          {
