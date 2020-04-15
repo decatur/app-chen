@@ -1,5 +1,7 @@
 // This is a Weblet module.
 
+import * as dummy from "/appchen/web_client/time_interval.js";
+
 const innerHTML = `
 <section style="height: 15ex;">
     section 1 with fixed height
@@ -8,10 +10,10 @@ const innerHTML = `
     </ul>
 </section>
 <section style="flex: 1;">
-    section 2 with flex
+    import * as dummy from "/appchen/web_client/time_interval1.js";
 </section>
 <section style="height: 10ex;">
-    section 3 with fixed height
+    <time-interval startOffset="-PT15M" endOffset="P1D"></time-interval>
 </section>
 `;
 
@@ -28,4 +30,8 @@ export function render(weblet) {
  */
 export function init(weblet) {
     weblet.element.innerHTML = innerHTML;
+    weblet.element.querySelector('time-interval1').onsubmit = (start, end) => {
+        alert(`${start} ${end}`);
+        return Promise.resolve();
+    }
 }
