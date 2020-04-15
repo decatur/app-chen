@@ -12,8 +12,11 @@ from appchen import eventing
 import requests
 
 
-# Patch very slow detection of event field delimiters.
+# TODO: Fork, Create issue, and make pull request for, https://github.com/mpetazzoni/sseclient,
+#       see workflow at https://github.com/processing/processing/wiki/Contributing-to-Processing-with-Pull-Requests
+# TODO: Alternative https://github.com/boppreh/server-sent-events
 class SSEClient1(SSEClient):
+    """Patches very slow detection of event field delimiters."""
     def __init__(self, url):
         super().__init__(url, chunk_size=10*1024)
 
