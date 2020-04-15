@@ -6,7 +6,7 @@
  * It subscribes to the 'time_state' and 'time_changed' events to synchronize UI-time with server time.
  * This web component may serve as a template for your own web components.
  */
-import {disableButtons, enableButtons, busy} from "/static/modules/formen.js"
+import {disableButtons, enableButtons, busy} from "./formen.js"
 import * as io from "/appchen/web_client/io.js"
 import {toLocaleISODateTimeString, resolvePeriod} from "/appchen/web_client/grid-chen/utils.js";
 
