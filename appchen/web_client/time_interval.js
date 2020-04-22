@@ -10,13 +10,13 @@ import {disableButtons, enableButtons, busy} from "./formen.js"
 import * as io from "/appchen/web_client/io.js"
 import {toLocaleISODateTimeString, resolvePeriod} from "/appchen/web_client/grid-chen/utils.js";
 
-const html = `<form style="margin-top:1ex">
+const html = `<form>
     <fieldset>
-        <label>Start Transaction Time <input name="start" value="" size="30"></label>
-        <label>End Transaction Time <input name="end" value="" size="30"></label>
+        <legend></legend>
+        <label>Start <input name="start" value="" size="30"></label>
+        <label>End <input name="end" value="" size="30"></label>
         <button name="toggleLock" title="Toggle Time Lock" type="button" style="font-size: large; background-color: #222">🔒</button>
         <button name="query" title="Apply Transaction Interval" type="submit" style="font-size: large">🔍</button>
-        <span class="status"></span>
     </fieldset>
 </form>`;
 
@@ -25,11 +25,13 @@ class TimeInterval extends HTMLElement {
     constructor() {
         super();
         const self = this;
+        const legend = this.innerHTML.trim();
         this.attachShadow({mode: 'open'});
         const container = this.shadowRoot;
         container.innerHTML = html;
         const form = container.querySelector('form');
         this.form = form;
+        form.querySelector('legend').textContent = legend;
         /** @type{HTMLButtonElement} */
         const toggleLock = form.toggleLock;
         /** @type{HTMLInputElement} */
@@ -38,17 +40,12 @@ class TimeInterval extends HTMLElement {
         const end = form['end'];
         start.disabled = end.disabled = true;
 
-        const status = form.querySelector('.status');
         form.onsubmit = (event) => {
             event.preventDefault();
             disableButtons(form);
             busy(form.query);
-            status.textContent = 'Loading ...';
             this.onsubmit(this.start(), this.end())
-                .then((statusText) => {
-                    status.textContent = /**@type{string}*/ statusText;
-                    enableButtons(form)
-                });
+                .finally(() => enableButtons(form));
         };
 
         toggleLock.onclick = () => {
@@ -91,7 +88,7 @@ class TimeInterval extends HTMLElement {
                 start.value = toLocaleISODateTimeString(startTransactionTime, resolvePeriod('SECONDS'));
             }
 
-            if (self.getAttribute('startOffset')) {
+            if (self.getAttribute('endOffset')) {
                 let endTime = timeOffset(response['transactionTime'], self.getAttribute('endOffset'));
                 end.value = toLocaleISODateTimeString(new Date(endTime), resolvePeriod('MINUTES'));
             } else {

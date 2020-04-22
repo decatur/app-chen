@@ -47,6 +47,7 @@ export function initializeApp(webletInfos) {
         app.activeWebletId = id;
 
         if (weblet.module) {
+            // TODO: Rename to onvisible()
             return weblet.module.render(weblet);
         } else {
             import(id)

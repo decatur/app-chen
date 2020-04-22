@@ -10,10 +10,10 @@ const innerHTML = `
     </ul>
 </section>
 <section style="flex: 1;">
-    import * as dummy from "/appchen/web_client/time_interval1.js";
+    <time-interval startOffset="-PT15M" endOffset="P1D"></time-interval>
 </section>
 <section style="height: 10ex;">
-    <time-interval startOffset="-PT15M" endOffset="P1D"></time-interval>
+    Footer
 </section>
 `;
 
@@ -30,7 +30,7 @@ export function render(weblet) {
  */
 export function init(weblet) {
     weblet.element.innerHTML = innerHTML;
-    weblet.element.querySelector('time-interval1').onsubmit = (start, end) => {
+    weblet.element.querySelector('time-interval').onsubmit = (start, end) => {
         alert(`${start} ${end}`);
         return Promise.resolve();
     }
