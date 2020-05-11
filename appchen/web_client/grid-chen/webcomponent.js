@@ -583,6 +583,7 @@ function createGrid(container, viewModel, gridchenElement, tm, totalHeight) {
         selection.show();
     }));
 
+    /** @returns {boolean} */
     function isColumnReadOnly(columnIndex) {
         const readOnly = schemas[columnIndex].readOnly;
         return readOnly === undefined ? schema.readOnly : readOnly;
@@ -1182,7 +1183,6 @@ function createGrid(container, viewModel, gridchenElement, tm, totalHeight) {
         repaintActiveCell
     };
     let selection = createSelection(repaintSelection, gridAbstraction);
-
     selection.setRange(0, 0, 1, 1);
 
     container.addEventListener('selectionChanged', function () {

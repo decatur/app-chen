@@ -2,7 +2,7 @@ declare module AppChenNS {
 
     export interface Weblet {
         id: string;
-        // title: string;
+        title: string;
         element: HTMLElement;
         navElement: HTMLElement;
         display: string;

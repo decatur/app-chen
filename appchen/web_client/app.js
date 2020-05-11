@@ -26,13 +26,29 @@ export function initializeApp(webletInfos) {
 
     /** @type{AppChenNS.WebletCollection} */
     const webletsById = /**@type{AppChenNS.WebletCollection}*/ {};
+    /** @type{AppChenNS.Weblet[]} */
+    const previousWeblets = [];
+
+
+    function refreshPreviousWeblets() {
+        const previousWebletsElement = document.getElementById('previousWeblets');
+        const button = previousWebletsElement.firstElementChild;
+        while (button.nextElementSibling) {
+            previousWebletsElement.removeChild(button.nextElementSibling)
+        }
+
+        for (let weblet of previousWeblets) {
+            const navElement = createWebletLink(weblet.id, weblet.title);
+            navElement.style.width = "fit-content";
+            previousWebletsElement.appendChild(navElement);
+        }
+    }
 
     /**
      * @returns {Promise}
      */
     function activateWebletFromHash() {
         const id = location.hash.substr(1);
-        document.getElementById('activeWeblet').textContent = '🗐 ' + webletsById[id].element.title;
         console.log('Activate Weblet ' + id);
 
         for (let weblet of Object.values(webletsById)) {
@@ -40,8 +56,19 @@ export function initializeApp(webletInfos) {
             weblet.navElement.className = 'nav';
         }
 
+        const index = previousWeblets.findIndex(weblet => weblet.id === id);
+        if ( index >= 0 ) {
+            previousWeblets.splice(index, 1);
+        }
+
         /** @type{AppChenNS.Weblet} */
         const weblet = webletsById[id];
+        previousWeblets.unshift(weblet);
+        if (previousWeblets.length > 3) {
+            previousWeblets.pop();
+        }
+        refreshPreviousWeblets();
+
         weblet.element.style.display = weblet.display;
         weblet.navElement.className = 'activeNav';
         app.activeWebletId = id;
@@ -60,7 +87,7 @@ export function initializeApp(webletInfos) {
                     weblet.element.textContent = String(err);
                 });
         }
-    };
+    }
 
     /**
      */
@@ -84,24 +111,30 @@ export function initializeApp(webletInfos) {
         }, 10);
     };
 
+    function createWebletLink(id, title) {
+        const navElement = document.createElement('a');
+        navElement.className = 'nav';
+        navElement.textContent = title;
+        navElement.href = '#' + id;
+        return navElement
+    }
+
     function createWebLets() {
         /** @type{HTMLDialogElement} */
         const dialogElement = /** @type{HTMLDialogElement} */(document.getElementById('menu'));
 
         for (const webletInfo of webletInfos) {
             const id = webletInfo.src;
+            const title = webletInfo.title;
             const webletElement = document.createElement('div');
-            webletElement.title = webletInfo.title;
+            webletElement.title = title;
             webletElement.className = 'weblet';
             document.body.appendChild(webletElement);
 
-            const navElement = document.createElement('a');
-            navElement.className = 'nav';
-            navElement.textContent = webletElement.title;
-            navElement.href = '#' + id;
+            const navElement = createWebletLink(id, title);
             dialogElement.firstElementChild.appendChild(navElement);
             webletsById[id] = {
-                id, element: webletElement, navElement,
+                id, title, element: webletElement, navElement,
                 display: webletElement.style.display || 'flex',
                 props: app.props,
                 isVisible() {
@@ -110,7 +143,7 @@ export function initializeApp(webletInfos) {
             };
         }
 
-        document.getElementById('activeWeblet').onclick = () => {
+        document.getElementById('showMenu').onclick = () => {
             dialogElement.classList.add('menu-opens');
             dialogElement.showModal();
         };
