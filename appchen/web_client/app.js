@@ -64,7 +64,7 @@ export function initializeApp(webletInfos) {
         /** @type{AppChenNS.Weblet} */
         const weblet = webletsById[id];
         previousWeblets.unshift(weblet);
-        if (previousWeblets.length > 3) {
+        if (previousWeblets.length > 5) {
             previousWeblets.pop();
         }
         refreshPreviousWeblets();
