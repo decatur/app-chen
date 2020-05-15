@@ -16,31 +16,26 @@ if (!!window.MSInputMethodContext && !!document['documentMode']) {
 export function initializeApp(webletInfos) {
 
     const app = {
-        props: {},
-        /** @type{string} */
-        activeWebletId: void 0,
-        activeWeblet() {
-            return webletsById[this.activeWebletId]
-        }
+        props: {}
     };
 
     /** @type{AppChenNS.WebletCollection} */
     const webletsById = /**@type{AppChenNS.WebletCollection}*/ {};
-    /** @type{AppChenNS.Weblet[]} */
-    const previousWeblets = [];
-
 
     function refreshPreviousWeblets() {
         const previousWebletsElement = document.getElementById('previousWeblets');
-        const button = previousWebletsElement.firstElementChild;
-        while (button.nextElementSibling) {
-            previousWebletsElement.removeChild(button.nextElementSibling)
+        while (previousWebletsElement.firstElementChild) {
+            previousWebletsElement.removeChild(previousWebletsElement.firstElementChild)
         }
 
-        for (let weblet of previousWeblets) {
+        let weblet = Object.values(webletsById).find(weblet => !weblet.prev);
+        while (weblet) {
             const navElement = createWebletLink(weblet.id, weblet.title);
             navElement.style.width = "fit-content";
+            navElement.style.position = "relative";
             previousWebletsElement.appendChild(navElement);
+            weblet = weblet.next;
+
         }
     }
 
@@ -56,22 +51,20 @@ export function initializeApp(webletInfos) {
             weblet.navElement.className = 'nav';
         }
 
-        const index = previousWeblets.findIndex(weblet => weblet.id === id);
-        if ( index >= 0 ) {
-            previousWeblets.splice(index, 1);
+
+        const weblet = Object.values(webletsById).find(weblet => weblet.id === id);
+        if (weblet.prev) {
+            const first = Object.values(webletsById).find(weblet => !weblet.prev);
+            weblet.prev.next = weblet.next;
+            weblet.prev = null;
+            weblet.next = first;
+            first.prev = weblet;
         }
 
-        /** @type{AppChenNS.Weblet} */
-        const weblet = webletsById[id];
-        previousWeblets.unshift(weblet);
-        if (previousWeblets.length > 5) {
-            previousWeblets.pop();
-        }
         refreshPreviousWeblets();
 
         weblet.element.style.display = weblet.display;
         weblet.navElement.className = 'activeNav';
-        app.activeWebletId = id;
 
         if (weblet.module) {
             // TODO: Rename to onvisible()
@@ -122,7 +115,7 @@ export function initializeApp(webletInfos) {
     function createWebLets() {
         /** @type{HTMLDialogElement} */
         const dialogElement = /** @type{HTMLDialogElement} */(document.getElementById('menu'));
-
+        let prev = null;
         for (const webletInfo of webletInfos) {
             const id = webletInfo.src;
             const title = webletInfo.title;
@@ -133,14 +126,19 @@ export function initializeApp(webletInfos) {
 
             const navElement = createWebletLink(id, title);
             dialogElement.firstElementChild.appendChild(navElement);
-            webletsById[id] = {
+            const weblet = webletsById[id] = {
                 id, title, element: webletElement, navElement,
                 display: webletElement.style.display || 'flex',
                 props: app.props,
+                prev,
                 isVisible() {
                     return !document.hidden && this.element.style.display !== 'none'
                 }
             };
+            if (prev) {
+                prev.next = weblet;
+            }
+            prev = weblet;
         }
 
         document.getElementById('showMenu').onclick = () => {

@@ -6,15 +6,16 @@
     <link rel="stylesheet" href="app.css" type="text/css"/>
 </head>
 <body>
-<header>
-    <span>App Shell</span>
-    <span id="previousWeblets">
-        <button id="showMenu" style="padding:1px 2em;">🗐</button>
+<header style="display: flex; height: 26px;">
+    <span style="flex-grow: 0;">App Shell</span>
+    <button id="showMenu" style="padding:1px 2em; flex-grow: 0;">🗐</button>
+    <span style="position: relative; overflow: hidden; flex-grow: 2">
+        <span id="previousWeblets"  style="position: absolute;"></span>
     </span>
     <dialog id="menu">
         <form method="dialog"></form>
     </dialog>
-    <span id="status" style="float:right;"></span>
+    <span id="status" style="flex-grow: 0;"></span>
 </header>
 
 </body>
