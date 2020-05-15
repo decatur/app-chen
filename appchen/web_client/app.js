@@ -31,8 +31,6 @@ export function initializeApp(webletInfos) {
         let weblet = Object.values(webletsById).find(weblet => !weblet.prev);
         while (weblet) {
             const navElement = createWebletLink(weblet.id, weblet.title);
-            navElement.style.width = "fit-content";
-            navElement.style.position = "relative";
             previousWebletsElement.appendChild(navElement);
             weblet = weblet.next;
 

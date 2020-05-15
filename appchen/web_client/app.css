@@ -25,19 +25,13 @@ header {
 .nav {
     display: inline-block;
     padding: 1ex;
-    border: 1px solid black;
-    margin: 0;
-    width: 20ex;
-    text-align: center;
+    /* margin: 0; */
 }
 
 .activeNav {
     display: inline-block;
-    padding: 1ex;
     border: 1px solid black;
-    margin: 0;
-    width: 20ex;
-    text-align: center;
+    /* margin: 0; */
     font-weight: bolder;
 }
 
