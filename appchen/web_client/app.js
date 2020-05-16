@@ -19,14 +19,18 @@ export function initializeApp(webletInfos) {
         props: {}
     };
 
-    /** @type{AppChenNS.WebletCollection} */
-    const webletsById = /**@type{AppChenNS.WebletCollection}*/ {};
+    /** @type{AppChenNS.Weblet[]} */
+    const weblets = /**@type{AppChenNS.Weblet[]}*/ [];
+
+    function webletById(id) {
+        return weblets.find(weblet => weblet.id === id)
+    }
 
     function refreshWebletsPriority() {
         const webletsPriority = document.getElementById('webletsPriority');
         webletsPriority.textContent = '';
 
-        let weblet = Object.values(webletsById).find(weblet => !weblet.prev);
+        let weblet = weblets.find(weblet => !weblet.prev);
         while (weblet) {
             const navElement = createWebletLink(weblet.id, weblet.title);
             webletsPriority.appendChild(navElement);
@@ -41,18 +45,18 @@ export function initializeApp(webletInfos) {
         const id = location.hash.substr(1);
         console.log('Activate Weblet ' + id);
 
-        for (let weblet of Object.values(webletsById)) {
+        for (let weblet of weblets) {
             weblet.element.style.display = 'none';
             weblet.navElement.className = 'nav';
         }
 
-        const weblet = Object.values(webletsById).find(weblet => weblet.id === id);
+        const weblet = weblets.find(weblet => weblet.id === id);
         if (weblet.prev) {
             weblet.prev.next = weblet.next;
             if (weblet.next) {
                 weblet.next.prev = weblet.prev;
             }
-            const first = Object.values(webletsById).find(weblet => !weblet.prev);
+            const first = weblets.find(weblet => !weblet.prev);
             weblet.prev = null;
             weblet.next = first;
             first.prev = weblet;
@@ -83,8 +87,8 @@ export function initializeApp(webletInfos) {
      */
     app.activate = function() {
         let hash = window.location.hash;
-        if (!(hash.substr(1) in webletsById)) {
-             hash = '#' + Object.keys(webletsById)[0];
+        if (!webletById(hash.substr(1))) {
+             hash = '#' + weblets[0].id;
         }
         // There must be a better way to call activateWebletFromHash exactly once.
         window.location.hash = hash;
@@ -92,8 +96,8 @@ export function initializeApp(webletInfos) {
         window.setTimeout(() => {
             // Attach onhashchange after the microtask otherwise activateWebletFromHash is called the second time.
             window.onhashchange = function () {
-                if (!(window.location.hash.substr(1) in webletsById)) {
-                    window.location.hash = '#' + Object.keys(webletsById)[0];
+                if (!webletById(window.location.hash.substr(1))) {
+                    window.location.hash = hash = '#' + weblets[0].id;
                 } else {
                     activateWebletFromHash();
                 }
@@ -124,7 +128,7 @@ export function initializeApp(webletInfos) {
 
             const navElement = createWebletLink(id, title);
             dialogElement.firstElementChild.appendChild(navElement);
-            const weblet = webletsById[id] = {
+            const weblet = {
                 id, title, element: webletElement, navElement,
                 display: webletElement.style.display || 'flex',
                 props: app.props,
@@ -132,6 +136,7 @@ export function initializeApp(webletInfos) {
                     return !document.hidden && this.element.style.display !== 'none'
                 }
             };
+            weblets.push(weblet);
 
             weblet.prev = prev;
             if (prev) {
@@ -156,7 +161,7 @@ export function initializeApp(webletInfos) {
             return
         }
 
-        for (const weblet of Object.values(webletsById).filter(weblet => weblet.module)) {
+        for (const weblet of weblets.filter(weblet => weblet.module)) {
             weblet.module.render(weblet);
         }
     }
