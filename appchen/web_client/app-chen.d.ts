@@ -1,5 +1,9 @@
 declare module AppChenNS {
 
+    export interface WebletModule {
+        render: (Weblet) => Promise<any>;
+    }
+
     export interface Weblet {
         id: string;
         title: string;
@@ -8,9 +12,9 @@ declare module AppChenNS {
         display: string;
         props: object;
         isVisible: () => boolean;
-        module: object;
-        next: Weblet;
-        prev: Weblet;
+        module?: WebletModule;
+        next?: Weblet;
+        prev?: Weblet;
     }
 
     export type RenderType = (weblet: Weblet, container: HTMLElement) => Promise<any>;

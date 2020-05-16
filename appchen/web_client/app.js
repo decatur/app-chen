@@ -22,18 +22,15 @@ export function initializeApp(webletInfos) {
     /** @type{AppChenNS.WebletCollection} */
     const webletsById = /**@type{AppChenNS.WebletCollection}*/ {};
 
-    function refreshPreviousWeblets() {
-        const previousWebletsElement = document.getElementById('previousWeblets');
-        while (previousWebletsElement.firstElementChild) {
-            previousWebletsElement.removeChild(previousWebletsElement.firstElementChild)
-        }
+    function refreshWebletsPriority() {
+        const webletsPriority = document.getElementById('webletsPriority');
+        webletsPriority.textContent = '';
 
         let weblet = Object.values(webletsById).find(weblet => !weblet.prev);
         while (weblet) {
             const navElement = createWebletLink(weblet.id, weblet.title);
-            previousWebletsElement.appendChild(navElement);
+            webletsPriority.appendChild(navElement);
             weblet = weblet.next;
-
         }
     }
 
@@ -49,28 +46,30 @@ export function initializeApp(webletInfos) {
             weblet.navElement.className = 'nav';
         }
 
-
         const weblet = Object.values(webletsById).find(weblet => weblet.id === id);
         if (weblet.prev) {
-            const first = Object.values(webletsById).find(weblet => !weblet.prev);
             weblet.prev.next = weblet.next;
+            if (weblet.next) {
+                weblet.next.prev = weblet.prev;
+            }
+            const first = Object.values(webletsById).find(weblet => !weblet.prev);
             weblet.prev = null;
             weblet.next = first;
             first.prev = weblet;
         }
 
-        refreshPreviousWeblets();
+        refreshWebletsPriority();
 
         weblet.element.style.display = weblet.display;
         weblet.navElement.className = 'activeNav';
 
         if (weblet.module) {
-            // TODO: Rename to onvisible()
+            // TODO: module may not have loaded yet. Use promise returnd by import below...
             return weblet.module.render(weblet);
         } else {
             import(id)
                 .then((module) => {
-                    weblet.module = module;
+                    weblet.module = /**@type {AppChenNS.WebletModule}*/module;
                     return module.init(weblet, weblet.element);
                 })
                 .catch((err) => {
@@ -92,7 +91,7 @@ export function initializeApp(webletInfos) {
         activateWebletFromHash();
         window.setTimeout(() => {
             // Attach onhashchange after the microtask otherwise activateWebletFromHash is called the second time.
-            window.onhashchange = function (evt) {
+            window.onhashchange = function () {
                 if (!(window.location.hash.substr(1) in webletsById)) {
                     window.location.hash = '#' + Object.keys(webletsById)[0];
                 } else {
@@ -113,6 +112,7 @@ export function initializeApp(webletInfos) {
     function createWebLets() {
         /** @type{HTMLDialogElement} */
         const dialogElement = /** @type{HTMLDialogElement} */(document.getElementById('menu'));
+        // window.localStorage
         let prev = null;
         for (const webletInfo of webletInfos) {
             const id = webletInfo.src;
@@ -128,11 +128,12 @@ export function initializeApp(webletInfos) {
                 id, title, element: webletElement, navElement,
                 display: webletElement.style.display || 'flex',
                 props: app.props,
-                prev,
                 isVisible() {
                     return !document.hidden && this.element.style.display !== 'none'
                 }
             };
+
+            weblet.prev = prev;
             if (prev) {
                 prev.next = weblet;
             }
@@ -144,7 +145,7 @@ export function initializeApp(webletInfos) {
             dialogElement.showModal();
         };
 
-        dialogElement.addEventListener('click', (evt) => {
+        dialogElement.addEventListener('click', () => {
             dialogElement.classList.remove('menu-opens');
             dialogElement.close();
         });
