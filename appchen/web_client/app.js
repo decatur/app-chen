@@ -20,8 +20,12 @@ export function initializeApp(webletInfos) {
     };
 
     /** @type{AppChenNS.Weblet[]} */
-    const weblets = /**@type{AppChenNS.Weblet[]}*/ [];
+    const weblets = [];
 
+    /**
+     * @param {string} id
+     * @returns {AppChenNS.Weblet}
+     */
     function webletById(id) {
         return weblets.find(weblet => weblet.id === id)
     }
@@ -30,11 +34,9 @@ export function initializeApp(webletInfos) {
         const webletsPriority = document.getElementById('webletsPriority');
         webletsPriority.textContent = '';
 
-        let weblet = weblets.find(weblet => !weblet.prev);
-        while (weblet) {
+        for (let weblet of weblets) {
             const navElement = createWebletLink(weblet.id, weblet.title);
             webletsPriority.appendChild(navElement);
-            weblet = weblet.next;
         }
     }
 
@@ -50,18 +52,9 @@ export function initializeApp(webletInfos) {
             weblet.navElement.className = 'nav';
         }
 
-        const weblet = weblets.find(weblet => weblet.id === id);
-        if (weblet.prev) {
-            weblet.prev.next = weblet.next;
-            if (weblet.next) {
-                weblet.next.prev = weblet.prev;
-            }
-            const first = weblets.find(weblet => !weblet.prev);
-            weblet.prev = null;
-            weblet.next = first;
-            first.prev = weblet;
-        }
-
+        const index = weblets.findIndex(weblet => weblet.id === id);
+        const weblet = weblets.splice(index, 1)[0];
+        weblets.unshift(weblet);
         refreshWebletsPriority();
 
         weblet.element.style.display = weblet.display;
@@ -83,8 +76,6 @@ export function initializeApp(webletInfos) {
         }
     }
 
-    /**
-     */
     app.activate = function() {
         let hash = window.location.hash;
         if (!webletById(hash.substr(1))) {
@@ -117,7 +108,6 @@ export function initializeApp(webletInfos) {
         /** @type{HTMLDialogElement} */
         const dialogElement = /** @type{HTMLDialogElement} */(document.getElementById('menu'));
         // window.localStorage
-        let prev = null;
         for (const webletInfo of webletInfos) {
             const id = webletInfo.src;
             const title = webletInfo.title;
@@ -137,12 +127,6 @@ export function initializeApp(webletInfos) {
                 }
             };
             weblets.push(weblet);
-
-            weblet.prev = prev;
-            if (prev) {
-                prev.next = weblet;
-            }
-            prev = weblet;
         }
 
         document.getElementById('showMenu').onclick = () => {
@@ -171,14 +155,8 @@ export function initializeApp(webletInfos) {
     return app
 }
 
-
-
 window.onerror = function (error, url, line) {
     // console.log(Array.prototype.slice.call(arguments).join(' '));
     console.log([error, url, line].join(' '));
     alert(error);
 };
-
-
-
-
