@@ -3,6 +3,7 @@ name = "appchen"
 version = "0.3.0"
 description = "a client/server web framework based an Python and modern JavaScript."
 authors = ["Wolfgang Kühn"]
+homepage = "https://github.com/decatur/app-chen"
 
 [tool.poetry.dependencies]
 Flask = "^1.1"
