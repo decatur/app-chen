@@ -1,0 +1,8 @@
+[tool.poetry]
+name = "appchen"
+version = "0.3.0"
+description = "a client/server web framework based an Python and modern JavaScript."
+authors = ["Wolfgang Kühn"]
+
+[tool.poetry.dependencies]
+Flask = "^1.1"

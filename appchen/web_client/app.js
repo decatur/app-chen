@@ -107,7 +107,6 @@ export function initializeApp(webletInfos) {
     function createWebLets() {
         /** @type{HTMLDialogElement} */
         const dialogElement = /** @type{HTMLDialogElement} */(document.getElementById('menu'));
-        // window.localStorage
         for (const webletInfo of webletInfos) {
             const id = webletInfo.src;
             const title = webletInfo.title;

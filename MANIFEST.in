@@ -1,5 +1,0 @@
-# TODO: This is just horrible, python packaging sucks. Is there a better way?
-graft appchen/web_client
-graft appchen/server_send_events
-graft appchen/web_demo
-graft appchen/demo
