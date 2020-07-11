@@ -24,6 +24,7 @@ pip install -r requirements.txt
 
 ````shell script
 pip install git+https://github.com/decatur/app-chen.git
+pip install appchen
  ````
 
 # Run Demo Web Server
@@ -40,4 +41,20 @@ You may now navigate to http://localhost:8080 with Chrome or Firefox.
 
 ````shell script
 python -m appchen.web_demo.client --httpport=8080
+````
+
+# Build
+
+````shell script
+poetry build
+````
+
+# Publishing to PyPI
+
+````shell script
+poetry config repositories.test_pypi https://test.pypi.org/legacy/
+poetry config http-basic.test_pypi user password
+poetry config http-basic.pypi user password
+
+poetry publish -r test_pypi
 ````
