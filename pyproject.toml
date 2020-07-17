@@ -1,12 +1,17 @@
 [tool.poetry]
 name = "appchen"
 version = "0.3.0"
-description = "a client/server web framework based an Python and modern JavaScript."
+description = "A client/server web framework based an Python and modern JavaScript."
 authors = ["Wolfgang Kühn"]
 homepage = "https://github.com/decatur/app-chen"
+repository = "https://github.com/decatur/app-chen"
+license = "MIT"
+readme = "README.md"
 
 [tool.poetry.dependencies]
+python = "^3.6"
 flask = "^1.1"
-pymongo
-sseclient
-requests
+pymongo = "^3.10"
+sseclient = "^0.0.24"
+requests  = "^2.23.0"
+formchen = "^0.1.2"

@@ -1,7 +1,7 @@
 // This is a Weblet module.
 
 import "/appchen/web_client/grid-chen/webcomponent.js";
-import {createView} from "/appchen/web_client/grid-chen/matrixview.js"
+import {createView} from "/gridchen/matrixview.js"
 import * as io from "/appchen/web_client/io.js";
 
 const innerHTML = `

@@ -26,7 +26,7 @@ export function bindSchema(schema, pointer, containerElement, onDataChanged) {
     const properties = schema.properties || [];
 
     if (pointer.length === 0) {
-        containerElement.classList.add('form-chen');
+        containerElement.classList.add('formchen');
     }
     //const fieldset = document.createElement('fieldset');
     //const legend = document.createElement('legend');

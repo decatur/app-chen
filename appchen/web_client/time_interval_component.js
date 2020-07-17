@@ -8,7 +8,7 @@
  */
 import {disableButtons, enableButtons, busy} from "./formen.js"
 import * as io from "/appchen/web_client/io.js"
-import {toLocaleISODateTimeString, resolvePeriod} from "/appchen/web_client/grid-chen/utils.js";
+import {toLocaleISODateTimeString, resolvePeriod} from "/gridchen/utils.js";
 
 const html = `<form style="margin-top:1ex">
     <fieldset>
