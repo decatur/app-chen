@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "appchen"
-version = "0.3.0"
+version = "0.3.1"
 description = "A client/server web framework based on Python and modern JavaScript."
 authors = ["Wolfgang Kühn"]
 homepage = "https://github.com/decatur/app-chen"
