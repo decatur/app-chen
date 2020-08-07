@@ -15,3 +15,9 @@ pymongo = "^3.7"
 sseclient = "^0.0.24"
 requests  = "^2.18.0"
 formchen = "^0.1.0"
+
+[build-system]
+requires = ["poetry"]
+build-backend = "poetry.masonry.api"
+# requires = ["setuptools >= 40.6.0", "wheel"]
+# build-backend = "setuptools.build_meta"
