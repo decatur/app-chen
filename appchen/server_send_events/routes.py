@@ -8,6 +8,8 @@ from flask import Response, request, jsonify, Blueprint
 from appchen.server_send_events import server
 
 _state_events_by_topic: Dict[str, Callable[[], dict]] = dict()
+
+# TODO: A note on static folder!
 app = Blueprint('appchen', __name__, static_folder='../web_client', static_url_path='')
 
 

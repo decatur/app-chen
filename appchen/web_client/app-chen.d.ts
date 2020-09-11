@@ -1,5 +1,10 @@
 declare module AppChenNS {
 
+    export class TimeInterval extends HTMLElement {
+        start: () => string;
+        end: () => string;
+    }
+
     export interface WebletModule {
         render: (Weblet) => Promise<any>;
     }
