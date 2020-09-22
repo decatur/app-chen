@@ -6,12 +6,14 @@
  *
  */
 
+// console.log(import.meta.url)
+
 export const readyStateLabels = [];
 ['CLOSED', 'CONNECTING', 'OPEN'].forEach(state => readyStateLabels[EventSource[state]] = state);
 
 // TODO: ev must not be a singleton but be parametrized by its url.
 let ev = {
-    eventSource: new EventSource("/appchen/web_client/stream/connection"),
+    eventSource: new EventSource("/@appchen/web_client/stream/connection"),
     connectionId: void 0,
     /** @type{AppChenNS.SubscriptionHandlers[]} */
     subscriptionConfigs: []
@@ -25,7 +27,7 @@ let ev = {
  * @param {Set<string>} topicsToSubscribe
  */
 ev.sendTopics = function (topicsToSubscribe) {
-    fetch('/appchen/web_client/stream/subscribe', {
+    fetch('/@appchen/web_client/stream/subscribe', {
         method: 'POST',
         headers: {'Content-Type': 'application/json; charset=utf-8'},
         body: JSON.stringify({

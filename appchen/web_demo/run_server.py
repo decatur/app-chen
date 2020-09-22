@@ -16,6 +16,8 @@ from random import randint, random
 import datetime
 import pymongo
 
+from whatchamacallit.flask import register
+
 logging.getLogger().setLevel(logging.INFO)
 
 parser = argparse.ArgumentParser()
@@ -35,10 +37,11 @@ except pymongo.errors.ConnectionFailure as e:
 static_folder = pathlib.Path(__file__).parent.resolve()
 # WARNING: When exposing the app to an unsecure location, the static_folder MUST only contain web resources!!!
 app = Flask(__name__, static_folder=static_folder, static_url_path='/')
+register(app)
 app.config['db'] = db
 
-app.register_blueprint(routes.app, url_prefix='/appchen/web_client')
-app.register_blueprint(weblet.app, url_prefix='/appchen/weblet')
+app.register_blueprint(routes.app, url_prefix='/@appchen/web_client')
+app.register_blueprint(weblet.app, url_prefix='/@appchen/weblet')
 
 trade_execution_schema = {'type': 'object', 'properties': {
     'delivery': {'columnIndex': 0, 'type': 'string', 'width': 200},
@@ -51,7 +54,7 @@ trade_execution_schema = {'type': 'object', 'properties': {
 
 @app.route("/", methods=['GET'])
 def get_home():
-    return redirect('/myapp.html')
+    return redirect('/@appchen/web_demo/myapp.html')
 
 
 @routes.route('trade_executions_state')

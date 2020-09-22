@@ -1,12 +1,12 @@
 // This is a Weblet module.
 
-import * as dummy from "/appchen/web_client/time_interval.js";
+import * as dummy from "appchen/web_client/time_interval.js";
 
 const innerHTML = `
 <section style="height: 15ex;">
     section 1 with fixed height
     <ul>
-        <li><a href="/appchen/weblet/editor.html" target="Edit">Edit</a></li>
+        <li><a href="/@appchen/weblet/editor.html" target="Edit">Edit</a></li>
     </ul>
 </section>
 <section style="flex: 1;">

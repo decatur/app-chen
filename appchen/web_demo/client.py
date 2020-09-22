@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--httpport", required=True, type=int)
 args = parser.parse_args()
 
-base_url = f'http://localhost:{args.httpport}/appchen/web_client/stream/'
+base_url = f'http://localhost:{args.httpport}/@appchen/web_client/stream/'
 es = EventSource(base_url + 'connection')
 
 

@@ -7,7 +7,7 @@
  * This web component may serve as a template for your own web components.
  */
 import {disableButtons, enableButtons, busy} from "./formen.js"
-import * as io from "/appchen/web_client/io.js"
+import * as io from "appchen/web_client/io.js"
 import {toLocaleISODateTimeString, resolvePeriod} from "gridchen/utils.js";
 
 const html = `<form style="margin-top:1ex">
