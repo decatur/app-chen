@@ -1,6 +1,6 @@
 /**
  * Author: Wolfgang Kühn 2020
- * Source located at https://github.com/decatur/app-chen
+ * Source located at https://github.com/decatur/appchen
  *
  * Module implementing a web component which represents a transactional time interval.
  * It subscribes to the 'time_state' and 'time_changed' events to synchronize UI-time with server time.

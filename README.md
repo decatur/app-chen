@@ -1,7 +1,7 @@
-# app-chen
+# appchen
 
 This is a client/server web framework based an Python and modern JavaScript.
-* Wraps the superb client side components codemirror and grid-chen as a Python package.
+* Wraps the superb client side component codemirror as a Python package.
 * Supports real time streaming via Server Send Events
 * Supports single page applications and in-app navigation
 * Supports on-the-fly web parts
@@ -10,11 +10,11 @@ This is a client/server web framework based an Python and modern JavaScript.
 
 # Setup
  
-## Option A: Clone app-chen
+## Option A: Clone appchen
 
 ````shell script
-git clone https://github.com/decatur/app-chen.git
-cd app-chen/
+git clone https://github.com/decatur/appchen.git
+cd appchen/
 python -m venv ./venv
 source venv/Scripts/activate
 pip install -r requirements.txt
@@ -23,7 +23,7 @@ pip install -r requirements.txt
 ## Option B: Install into Existing Project
 
 ````shell script
-pip install git+https://github.com/decatur/app-chen.git
+pip install git+https://github.com/decatur/appchen.git
 pip install appchen
  ````
 
