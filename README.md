@@ -56,9 +56,5 @@ poetry build
 # Publishing to PyPI
 
 ````shell script
-poetry config repositories.test_pypi https://test.pypi.org/legacy/
-poetry config http-basic.test_pypi user password
-poetry config http-basic.pypi user password
-
 poetry publish -r test_pypi
 ````
