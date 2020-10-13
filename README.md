@@ -46,6 +46,8 @@ python -m appchen.web_demo.client --httpport=8080
 # Build
 
 ````shell script
+vi pyproject.toml
+git tag x.y.z
 poetry build
 ````
 
