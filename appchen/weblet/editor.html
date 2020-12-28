@@ -121,7 +121,7 @@
     }
 
     const model = new Model();
-    const stream = io.stream();
+    const stream = io.stream('');
     stream.subscribe({
         'weblets_state': (response) => {
             model.schema = response.schema;

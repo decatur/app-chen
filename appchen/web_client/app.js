@@ -10,10 +10,10 @@ if (!!window.MSInputMethodContext && !!document['documentMode']) {
 }
 
 /**
- *
+ * @param {string} rootPath
  * @param {{title: string, src: string}[]} webletInfos
  */
-export function initializeApp(webletInfos) {
+export function initializeApp(rootPath, webletInfos) {
 
     const app = {
         props: {}
@@ -108,7 +108,7 @@ export function initializeApp(webletInfos) {
         /** @type{HTMLDialogElement} */
         const dialogElement = /** @type{HTMLDialogElement} */(document.getElementById('menu'));
         for (const webletInfo of webletInfos) {
-            const id = webletInfo.src;
+            const id = (webletInfo.src.charAt(0)==='/'?rootPath:'') + webletInfo.src;
             const title = webletInfo.title;
             const webletElement = document.createElement('div');
             webletElement.title = title;

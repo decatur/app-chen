@@ -83,7 +83,7 @@ export function init(weblet, container) {
     summaryTable.resetFromView(createView(summarySchema, [lastPrice, vwap, transactionCount]));
     transactionsTable = container.querySelector('.transactionsTable');
 
-    const subscription = io.stream().subscribe({
+    const subscription = io.stream('').subscribe({
         'trade_executions_state': (state) => {
             transactionsTable.resetFromView(createView(state.schema, model.transactions));
             model.addTrades(state.data);

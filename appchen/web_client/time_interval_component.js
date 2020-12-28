@@ -64,7 +64,7 @@ class TimeInterval extends HTMLElement {
             end.value = toLocaleISODateTimeString(endTransactionTime, resolvePeriod('SECONDS'));
         }
 
-        io.stream().subscribe({
+        io.stream('').subscribe({
             'time_state': processTime,
             'time_changed': (response) => {
                 if (toggleLock.textContent === '🔓') return;
