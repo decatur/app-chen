@@ -78,11 +78,17 @@ ev.unregisterEventSourcing = function (config) {
     ev.subscriptionConfigs.splice(index, 1);
 };
 
+
+let streamObj = null;
 /**
  * @param {string} rootPath
  * @returns {AppChenNS.Stream}
  */
 export function stream(rootPath) {
+    if (streamObj) {
+        return streamObj
+    }
+    
     ev.rootPath = rootPath;
     ev.eventSource = new EventSource(rootPath + "/@appchen/web_client/stream/connection");
     ev.eventSource.addEventListener('connection_open', function (event) {
@@ -95,7 +101,7 @@ export function stream(rootPath) {
         ev.sendTopics(topicTypes);
     });
 
-    return {
+    streamObj = {
         /**
          * @param {AppChenNS.SubscriptionHandlers} topics
          */
@@ -117,7 +123,9 @@ export function stream(rootPath) {
         setErrorListener(listener) {
             ev.eventSource.onerror = listener;
         }
-    }
+    };
+
+    return streamObj
 }
 
 /**
