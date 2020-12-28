@@ -39,16 +39,6 @@ ev.sendTopics = function (topicsToSubscribe) {
         .catch(handleError);
 };
 
-ev.eventSource.addEventListener('connection_open', function (event) {
-    const data = JSON.parse(event.data);
-    ev.connectionId = data['connectionId'];
-    const topicTypes = new Set();
-    for (const /**@type{AppChenNS.SubscriptionHandlers}*/topics of ev.subscriptionConfigs) {
-        Object.keys(topics).forEach(topic => topicTypes.add(topic));
-    }
-    ev.sendTopics(topicTypes);
-});
-
 /**
  * @param {AppChenNS.SubscriptionHandlers} topics
  */
@@ -94,7 +84,17 @@ ev.unregisterEventSourcing = function (config) {
  */
 export function stream(rootPath) {
     ev.rootPath = rootPath;
-    ev.eventSource= new EventSource(rootPath + "/@appchen/web_client/stream/connection");
+    ev.eventSource = new EventSource(rootPath + "/@appchen/web_client/stream/connection");
+    ev.eventSource.addEventListener('connection_open', function (event) {
+        const data = JSON.parse(event.data);
+        ev.connectionId = data['connectionId'];
+        const topicTypes = new Set();
+        for (const /**@type{AppChenNS.SubscriptionHandlers}*/topics of ev.subscriptionConfigs) {
+            Object.keys(topics).forEach(topic => topicTypes.add(topic));
+        }
+        ev.sendTopics(topicTypes);
+    });
+
     return {
         /**
          * @param {AppChenNS.SubscriptionHandlers} topics
