@@ -55,7 +55,7 @@ class Connection:
     def emit(self, event_type: str, event: dict):
         """Emit the event to this connection only."""
         data = json.dumps(event)
-        logging.debug(f'emit {event_type} {data}')
+        logging.debug(f'emit {event_type}')
         self.queue.put((event_type, data))
 
 
@@ -96,7 +96,7 @@ def broadcast(topic: str, event: Union[Callable[[], Dict], Dict]):
     if isinstance(event, types.FunctionType):
         event = event()
     data = json.dumps(event)
-    logging.debug(f'broadcast {topic} {data}')
+    logging.debug(f'broadcast {topic}')
     if topic not in declared_topics:
         declared_topics[topic] = dict(topic=topic, description='TODO', example=event)
     if declared_topics[topic]['example'] is None:

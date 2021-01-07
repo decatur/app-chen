@@ -88,7 +88,7 @@ export function stream(rootPath) {
     if (streamObj) {
         return streamObj
     }
-    
+
     ev.rootPath = rootPath;
     ev.eventSource = new EventSource(rootPath + "/@appchen/web_client/stream/connection");
     ev.eventSource.addEventListener('connection_open', function (event) {
