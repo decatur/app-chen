@@ -24,7 +24,7 @@ _connections = collections.deque()
 _connections_by_event_type = collections.defaultdict(set)
 declared_topics: Dict[str, dict] = dict()
 _keep_alive_thread: threading.Thread = None
-
+_event_cache_by_topic: Dict[str, str] = {}
 
 class Connection:
     """A Connection represents the HTTP connection initiated by a client (Browser) over which the events are send."""
@@ -75,6 +75,8 @@ def subscribe(connection: Connection, event_types: List[str]):
         raise ValueError(connection.id)
     for event_type in event_types:
         register(connection, event_type)
+        if event_type in _event_cache_by_topic:
+            connection.queue.put((event_type, _event_cache_by_topic[event_type]))
 
 
 def get_connection_by_id(guid: str) -> Optional[Connection]:
@@ -96,6 +98,7 @@ def broadcast(topic: str, event: Union[Callable[[], Dict], Dict]):
     if isinstance(event, types.FunctionType):
         event = event()
     data = json.dumps(event)
+    _event_cache_by_topic[topic] = data
     logging.debug(f'broadcast {topic}')
     if topic not in declared_topics:
         declared_topics[topic] = dict(topic=topic, description='TODO', example=event)

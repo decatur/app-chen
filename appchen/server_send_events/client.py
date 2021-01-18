@@ -12,9 +12,7 @@ from appchen import eventing
 import requests
 
 
-# TODO: Fork, Create issue, and make pull request for, https://github.com/mpetazzoni/sseclient,
-#       see workflow at https://github.com/processing/processing/wiki/Contributing-to-Processing-with-Pull-Requests
-# TODO: Alternative https://github.com/boppreh/server-sent-events
+# TODO: Dump this an go async
 class SSEClient1(SSEClient):
     """Patches very slow detection of event field delimiters."""
     def __init__(self, url):
@@ -34,7 +32,6 @@ class SSEClient1(SSEClient):
                     raise EOFError()
                 pos = max(0, len(self.buf) - 4)
                 self.buf += decoder.decode(next_chunk)
-
             except (StopIteration, requests.RequestException, EOFError, http.client.IncompleteRead) as e:
                 time.sleep(self.retry / 1000.0)
                 self._connect()
@@ -95,6 +92,7 @@ class EventSource(eventing.EventSource):
                 try:
                     messages = SSEClient1(self.url)
                 except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as e:
+                    logging.exception(self.url)
                     self._process_event(Event(data=str(e), event='error'))
                     return
 
