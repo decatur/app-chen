@@ -46,8 +46,8 @@ python -m appchen.web_demo.client --httpport=8080
 # Build
 
 ````shell script
-vi pyproject.toml
-git add pyproject.toml
+vi setup.py
+git add setup.py
 git commit -m'bumped version'
 git tag x.y.z
 git push & git push --tags
