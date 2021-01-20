@@ -161,7 +161,8 @@ export function handleError(error) {
 export function rejectHttpError(response) {
     // Returns a rejected promise.
     return response.text().then(function (body) {
-        if (response.headers.get('content-type').startsWith("text/html")) {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.startsWith("text/html")) {
             console.log(body);
             //body = 'See console.'
         }
