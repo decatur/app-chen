@@ -47,6 +47,7 @@ class Connection:
             while True:
                 event_type, data = self.queue.get()
                 self.queue.task_done()  # We do not need this
+                # TODO: this assumes that date is single line!!!
                 yield f'event: {event_type}\ndata: {data}\n\n'  # This is SSE syntax
         except GeneratorExit as e:
             print(repr(e))
@@ -92,12 +93,13 @@ def broadcast(topic: str, event: Union[Callable[[], Dict], Dict]):
     Broadcasts the event to all registered Connections.
     The event must be serializable by json.dumps()
     """
-    if topic not in _connections_by_event_type:
-        return
+    # if topic not in _connections_by_event_type:
+    #    return
 
     if isinstance(event, types.FunctionType):
         event = event()
     data = json.dumps(event)
+    # TODO: Push event to cache, not data
     _event_cache_by_topic[topic] = data
     logging.debug(f'broadcast {topic}')
     if topic not in declared_topics:
