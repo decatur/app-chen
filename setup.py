@@ -25,7 +25,7 @@ install_requires = \
 
 setup(
     name='appchen',
-    version='0.3.5beta2',
+    version='0.3.6',
     description='A client/server web framework based on Python and modern JavaScript.',
     long_description=long_description,
     long_description_content_type="text/markdown",
