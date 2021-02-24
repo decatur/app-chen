@@ -93,19 +93,17 @@ def broadcast(topic: str, event: Union[Callable[[], Dict], Dict]):
     Broadcasts the event to all registered Connections.
     The event must be serializable by json.dumps()
     """
-    # if topic not in _connections_by_event_type:
-    #    return
+    if topic not in _connections_by_event_type:
+        return
 
     if isinstance(event, types.FunctionType):
         event = event()
     data = json.dumps(event)
-    # TODO: Push event to cache, not data
-    # _event_cache_by_topic[topic] = data
     logging.debug(f'broadcast {topic}')
-    if topic not in declared_topics:
-        declared_topics[topic] = dict(topic=topic, description='TODO', example=event)
-    if declared_topics[topic]['example'] is None:
-        declared_topics[topic]['example'] = event
+    # if topic not in declared_topics:
+    #     declared_topics[topic] = dict(topic=topic, description='TODO', example=event)
+    # if declared_topics[topic]['example'] is None:
+    #     declared_topics[topic]['example'] = event
 
     for connection in _connections_by_event_type[topic]:
         connection.queue.put((topic, data))

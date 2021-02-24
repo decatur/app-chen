@@ -2,5 +2,7 @@ TODO.txt
 poetry.lock
 __pycache__/
 dist/
+*.egg-info/
+
 venv/
 .idea/
