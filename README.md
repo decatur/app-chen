@@ -51,11 +51,11 @@ git add setup.py
 git commit -m'bumped version'
 git tag x.y.z
 git push & git push --tags
-python3 setup.py sdist bdist_wheel
+python setup.py sdist bdist_wheel
 ````
 
 # Publishing to PyPI
 
 ````shell script
-python3 -m twine upload --repository testpypi dist/*
+python -m twine upload dist/*
 ````
