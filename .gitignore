@@ -1,3 +1,4 @@
+build/
 TODO.txt
 poetry.lock
 __pycache__/
